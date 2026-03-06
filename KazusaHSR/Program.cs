@@ -2,8 +2,6 @@
 using KazusaHSR.Resource;
 using KazusaHSR.WebServer;
 using KazusaHSR.GameServer;
-using System.Diagnostics;
-using System.IO.Pipes;
 
 namespace KazusaHSR;
 
