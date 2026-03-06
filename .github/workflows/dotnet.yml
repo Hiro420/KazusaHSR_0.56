@@ -64,7 +64,7 @@ jobs:
 
       - name: Publish for ${{ matrix.rid }} (${{ matrix.mode }})
         run: >
-          dotnet publish Program\Program.csproj
+          dotnet publish KazusaHSR\KazusaHSR.csproj
           --configuration Release
           --framework net8.0
           --runtime ${{ matrix.rid }}
