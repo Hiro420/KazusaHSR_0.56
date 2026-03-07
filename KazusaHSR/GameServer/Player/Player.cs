@@ -97,7 +97,7 @@ public class Player
 		{
 			if (avatarRow.AvatarID == 1007)
 				continue;
-			if (avatarRow.Release == false && MainApp.config.GameServer.AllowTestCharacters)
+			if (avatarRow.Release == false && !MainApp.config.GameServer.AllowTestCharacters)
 				continue;
 			PlayerAvatar playerAvatar = new(session, avatarRow.AvatarID);
 			this.avatarDict.Add(playerAvatar.Guid, playerAvatar);
