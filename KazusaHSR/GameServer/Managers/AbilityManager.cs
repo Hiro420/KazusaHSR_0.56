@@ -18,7 +18,7 @@ public sealed class AbilityManager
 
     // AvatarId -> AdventurePlayerRow, loaded from AdventurePlayerExcel
     private static readonly IReadOnlyDictionary<uint, AdventurePlayerRow> AdventurePlayerByAvatarId =
-        ResourceManager.AdventurePlayerExcel.ToDictionary(x => x.AvatarId);
+        ResourceManager.AdventurePlayerExcel.ToDictionary(x => x.AvatarID);
 
     public AbilityManager(Session session)
     {
@@ -40,7 +40,7 @@ public sealed class AbilityManager
             return;
         }
 
-        if (req.SkillIndex >= adventurePlayer.MazeSkillIdList.Count)
+        if (req.SkillIndex >= adventurePlayer.MazeSkillIdList.Length)
         {
             // Out-of-range index -> fall back to battle skill (wtf again)
             TriggerBattleSkill(avatar, req, rsp);
@@ -88,7 +88,7 @@ public sealed class AbilityManager
 		if (string.IsNullOrEmpty(entryAbilityName))
         {
             this._session.c.LogWarning(
-                $"No EntryAbility found for AdventurePlayer AvatarId={adventurePlayer.AvatarId} " +
+                $"No EntryAbility found for AdventurePlayer AvatarId={adventurePlayer.AvatarID} " +
                 $"and MazeSkillId={mazeSkill.MazeSkillId}.");
 			return;
         }
@@ -100,7 +100,7 @@ public sealed class AbilityManager
             // Maybe data issue? Meh, just log and skip executing any ability
             this._session.c.LogWarning(
                 $"No AdventureAbilityConfig found for EntryAbility={entryAbilityName} " +
-                $"(AdventurePlayer AvatarId={adventurePlayer.AvatarId}, MazeSkillId={mazeSkill.MazeSkillId}).");
+                $"(AdventurePlayer AvatarId={adventurePlayer.AvatarID}, MazeSkillId={mazeSkill.MazeSkillId}).");
             return;
         }
 

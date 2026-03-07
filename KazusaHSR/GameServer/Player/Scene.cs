@@ -23,7 +23,7 @@ public class Scene
 
 	private uint _nextEntityIndex = 0;
 	private readonly object _entityIdLock = new();
-	private MazePlaneRow mazePlaneExcel => MainApp.resourceManager.MazePlaneExcel.Find(m => m.PlaneId == PlaneId)!;
+	private MazePlaneRow mazePlaneExcel => MainApp.resourceManager.MazePlaneExcel.Find(m => m.PlaneID == PlaneId)!;
 	private LevelFloorInfo levelFloorInfo => MainApp.resourceManager.LevelFloorInfos[PlaneId][FloorId];
 	public Dictionary<uint, LevelGroupInfo> LevelGroups => GetDefaultLevelGroups();
 	public AbilityManager AbilityManager => session.AbilityManager;
@@ -102,7 +102,7 @@ public class Scene
 			// brute-force all sections by setting them to all ints between 0 and 31
 			// not ideal, but I was too lazy to figure out how sections actually work and this is good enough (for now)
 			LightenSectionLists = Enumerable.Range(0, 32).Select(i => (uint)i).ToArray(),
-			MapId = this.mazePlaneExcel.MapId,
+			MapId = this.mazePlaneExcel.MapID,
 			EntryId = this.EntranceId,
 		};
 		foreach (var entity in this.EntityManager.Entities.Values)
@@ -114,7 +114,7 @@ public class Scene
 
 	public void AddAllEntities()
 	{
-		foreach (PlayerAvatar avatar in this.session.player!.GetCurrentLineup().Avatars)
+		foreach (PlayerAvatar avatar in this.session.player!.GetCurrentLineup().Avatars.Where(a => a != null))
 		{
 			this.EntityManager.Add(new AvatarEntity(this.session, avatar));
 		}

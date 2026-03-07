@@ -1,0 +1,62 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace KazusaHSR.GameServer.Resource.Excel;
+
+public enum GAAOMMCJHGB
+{
+	Unknown = 0,
+	AutoFinish = 1,
+	Talk = 2,
+	StageWin = 3,
+	EnterRegion = 4,
+	PropState = 5,
+	ItemNum = 6,
+	BuyShopGoods = 7,
+	FinishMission = 8,
+	GetAvatarStar = 9,
+	LeaveRegion = 10,
+	EquipmentLevel = 11,
+	EquipmentPromoteUp = 12,
+	EquipmentRankUp = 13,
+	EquipmentStarCnt = 14,
+	EquipmentLevelCnt = 15,
+	EquipmentPromoteCnt = 16,
+	EquipmentRankCnt = 17,
+	WorldLevel = 18,
+	EnterMapByEntrance = 19,
+	BookNum = 20,
+	PropTypeInteract = 21,
+	ChallengeFinish = 22,
+	CocoonFinish = 25,
+	AnyCocoonFinish = 26,
+	ConsumeMissionItem = 27,
+	ConsumeStamina = 101,
+	PlayerLevel = 102,
+	PlayerLevelUp = 103,
+	FinishQuest = 104,
+	GetItem = 201,
+	UseItem = 202,
+	AvatarLevel = 301,
+	AvatarPromote = 302,
+	AvatarRank = 303,
+	UnlockSkilltree = 304,
+	AvatarLevelUp = 305,
+	AvatarPromoteUp = 306,
+	AvatarRankUp = 307,
+	UnlockSkilltreeUp = 308,
+	AvatarLevelCnt = 309,
+	AvatarPromoteCnt = 310,
+	AvatarRankCnt = 311,
+	UnlockSkilltreeCnt = 312,
+	AnyAvatarUnlockSkilltreeCnt = 313,
+	AnyAvatarPromoteCnt = 314,
+	TagStageWin = 401,
+	KillMonster = 402,
+	TagStageUseAvatar = 403,
+	KillMonsterList = 404,
+	InteractPropList = 405,
+}

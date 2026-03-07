@@ -42,6 +42,9 @@ public class ResourceLoader
 		this._resourceManager.MainMissionExcel = LoadExcel<MainMissionRow>("MainMission");
 		this._resourceManager.MazePlaneExcel = LoadExcel<MazePlaneRow>("MazePlane");
 		this._resourceManager.InteractExcel = LoadExcel<InteractRow>("InteractConfig");
+		this._resourceManager.ItemConfig = LoadExcel<ItemRow>("ItemConfig");
+		this._resourceManager.ItemConfigAvatar = LoadExcel<ItemRow>("ItemConfigAvatar");
+		this._resourceManager.ItemConfigEquipment = LoadExcel<ItemRow>("ItemConfigEquipment");
 		this._resourceManager.MonsterExcel = LoadExcel<MonsterRow>("MonsterConfig");
 		this._resourceManager.StageExcel = LoadExcel<StageRow>("StageConfig");
 		this._resourceManager.PlaneEventExcel = LoadExcel<PlaneEventRow>("PlaneEvent");
@@ -50,13 +53,16 @@ public class ResourceLoader
 		this._resourceManager.CocoonExcel = LoadExcel<CocoonRow>("CocoonConfig");
 		this._resourceManager.MazeSkillExcel = LoadExcel<MazeSkillRow>("MazeSkill");
 		this._resourceManager.AdventurePlayerExcel = LoadExcel<AdventurePlayerRow>("AdventurePlayer");
+		this._resourceManager.ShopConfig = LoadExcel<ShopConfigRow>("ShopConfig");
+		this._resourceManager.ShopGoodsConfig = LoadExcel<ShopGoodsConfigRow>("ShopGoodsConfig");
+		this._resourceManager.ShopGoodsGroupConfig = LoadExcel<ShopGoodsGroupConfigRow>("ShopGoodsGroupConfig");
 		logger.LogSuccess("Finished loading excels");
 
 		// Load Configs
 		foreach (MazePlaneRow row in this._resourceManager.MazePlaneExcel)
 		{
-			uint planeId = row.PlaneId;
-			foreach (uint floorId in row.FloorIdList)
+			uint planeId = row.PlaneID;
+			foreach (uint floorId in row.FloorIDList)
 			{
 				string fileName = $"P{planeId}_F{floorId}";
 				LevelFloorInfo floorInfo = LoadConfig<LevelFloorInfo>(fileName, "LevelOutput", "Floor");

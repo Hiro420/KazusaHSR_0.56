@@ -18,7 +18,7 @@ internal class HandleGetAllLineupDataCsReq
 		{
 			CurIndex = session.player.TeamIndex,
 		};
-		foreach (PlayerTeam team in session.player.teamList)
+		foreach (PlayerTeam team in session.player.TeamManager.Teams)
 		{
 			rsp.LineupLists.Add(team.ToTeamProto());
 		}

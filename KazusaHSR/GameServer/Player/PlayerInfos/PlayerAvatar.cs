@@ -28,19 +28,19 @@ public class PlayerAvatar
 	public uint PromoteLevel { get; set; }
 	public uint SkillCastCnt { get; set; }
 
-	public PlayerAvatar(Session session, uint AvatarId)
+	public PlayerAvatar(Session session, uint AvatarId, uint? tid = null)
 	{
 		this.Session = session;
 		this.Guid = session.GetGuid();
 		this.AvatarId = AvatarId;
-		this.AvatarExcel = resourceManager.AvatarExcel.Find(a => a.AvatarId == AvatarId)!;
+		this.AvatarExcel = resourceManager.AvatarExcel.Find(a => a.AvatarID == AvatarId)!;
 		this.Level = 80;
 		this.Exp = 0;
 		this.PromoteLevel = 5;
 		this.Rank = 6;
 		this.MaxHp = GetMaxHp();
 		this.Hp = this.MaxHp;
-		this.SP = (uint)AvatarExcel.SpNeed.Value;
+		this.SP = (uint)AvatarExcel.SPNeed.Value;
 		this.SkillCastCnt = 0;
 	}
 
@@ -70,7 +70,7 @@ public class PlayerAvatar
 	public uint GetBaseMaxHp()
 	{
 		AvatarPromotionRow? confg = resourceManager.AvatarPromotionExcel
-			.Where(a => a.AvatarId == this.AvatarId && a.Promotion == this.PromoteLevel)
+			.Where(a => a.AvatarID == this.AvatarId && a.Promotion == this.PromoteLevel)
 			.OrderByDescending(a => a.MaxLevel)
 			.FirstOrDefault();
 
@@ -82,8 +82,8 @@ public class PlayerAvatar
 			if (clampedLevel > confg.MaxLevel)
 				clampedLevel = confg.MaxLevel;
 
-			float baseHp = confg.HpBase.Value;
-			float addHp = confg.HpAdd.Value;
+			float baseHp = confg.HPBase.Value;
+			float addHp = confg.HPAdd.Value;
 
 			float hp = baseHp + addHp * (clampedLevel - 1);
 

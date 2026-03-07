@@ -20,7 +20,7 @@ internal class HandleGetMissionDataCsReq
 		foreach (MainMissionRow mission in MainApp.resourceManager.MainMissionExcel)
 		{
 			// todo: actually store mission data per player
-			uints.Add(mission.MainMissionId);
+			uints.Add(mission.MainMissionID);
 		}
 		rsp.FinishedMainMissionIdLists = uints.ToArray(); // had to cuz Append didnt work
 		session.SendPacket(rsp);

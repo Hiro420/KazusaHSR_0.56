@@ -21,8 +21,12 @@ public class Config
             Environment.Exit(0);
         }
 
-        return JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText(filePath))!;
-    }
+        string jsonContent = System.IO.File.ReadAllText(filePath);
+		// in case there are new options added in the future, we can just overwrite the config file with the new options without losing the old options
+		File.WriteAllText(filePath, JsonConvert.SerializeObject(new Config(), Formatting.Indented));
+		return JsonConvert.DeserializeObject<Config>(jsonContent)!;
+
+	}
 }
 
 public class LogOptionInfo
@@ -37,6 +41,7 @@ public class GameServerInfo
     public string ServerIP { get; set; } = "127.0.0.1";
     public int ServerPort { get; set; } = 6969;
     public bool AutoCreateAccount { get; set; } = true; // unused for now
+    public bool AllowTestCharacters { get; set; } = false;
 }
 
 public class WebServerInfo

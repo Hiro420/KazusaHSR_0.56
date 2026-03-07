@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +8,7 @@ namespace KazusaHSR.GameServer.Resource.Excel;
 
 public class AvatarSkillRow
 {
-	public uint SkillId { get; set; }
+	public uint SkillID { get; set; }
 	public TextID SkillName { get; set; }
 	public TextID SkillTag { get; set; }
 	public TextID SkillTypeDesc { get; set; }
@@ -17,20 +17,23 @@ public class AvatarSkillRow
 	public string SkillTriggerKey { get; set; }
 	public string SkillIcon { get; set; }
 	public string SkillTagIcon { get; set; }
-	public List<object> LevelUpCostList { get; set; }
+	public uint LevelUpLevelCond { get; set; }
+	public uint LevelUpRankCond { get; set; }
+	public string[] LevelUpCostList { get; set; }
 	public TextID SkillDesc { get; set; }
-	public List<object> ExtraEffectIdList { get; set; }
-	public List<object> ShowStanceList { get; set; }
-	public List<object> ShowDamageList { get; set; }
-	public List<object> ShowHealList { get; set; }
+	public uint[] ExtraEffectIDList { get; set; }
+	public FixPoint[] ShowStanceList { get; set; }
+	public BHANHBMOKGN[] ShowDamageList { get; set; }
+	public FGCBANMGAFH[] ShowHealList { get; set; }
 	public int InitCoolDown { get; set; }
 	public int CoolDown { get; set; }
-	public FixPoint SpMultipleRatio { get; set; }
-	public FixPoint BpNeed { get; set; }
+	public FixPoint SPAdd { get; set; }
+	public FixPoint SPBase { get; set; }
+	public FixPoint SPMultipleRatio { get; set; }
+	public FixPoint BPNeed { get; set; }
+	public FixPoint BPAdd { get; set; }
 	public FixPoint DelayRatio { get; set; }
-	public List<FixPoint> ParamList { get; set; }
-	public FixPoint SpBase { get; set; }
-	public FixPoint BpAdd { get; set; }
-	public string StanceDamageType { get; set; }
-	public string AttackType { get; set; }
+	public FixPoint[] ParamList { get; set; }
+	public AttackDamageType StanceDamageType { get; set; }
+	public AttackType AttackType { get; set; }
 }

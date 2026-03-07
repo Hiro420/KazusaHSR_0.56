@@ -15,19 +15,13 @@ internal class HandleChangeLineupLeaderCsReq
 	{
 		ChangeLineupLeaderCsReq req = packet.GetDecodedBody<ChangeLineupLeaderCsReq>();
 		ChangeLineupLeaderScRsp rsp = new ChangeLineupLeaderScRsp();
-		PlayerTeam playerTeam = session.player.GetCurrentLineup();
-
-		if (req.Slot >= playerTeam.Avatars.Count)
+		var result = session.player.TeamManager.ChangeLeader((int)session.player.TeamIndex, (int)req.Slot);
+		rsp.Retcode = (uint)result;
+		if (result == Retcode.RetSucc)
 		{
-			rsp.Retcode = (int)Retcode.RetLineupAvatarNotExist; // invalid slot
-		}
-		else
-		{
-			session.player.GetCurrentLineup().SetLeader(session, playerTeam.Avatars[(int)req.Slot]);
 			rsp.Slot = req.Slot;
 		}
 
 		session.SendPacket(rsp);
-		session.player.SavePersistent();
 	}
 }

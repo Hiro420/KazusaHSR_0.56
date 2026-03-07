@@ -15,9 +15,9 @@ internal class HandleGetBagCsReq
 	{
 		GetBagCsReq req = packet.GetDecodedBody<GetBagCsReq>();
 		GetBagScRsp rsp = new GetBagScRsp();
-		foreach (PlayerItem equip in session.player.itemDict.Values)
+		foreach (PlayerItem equip in session.player.ItemManager.Items)
 		{
-			rsp.MaterialLists.Add(equip.ToMaterialInfo());
+			equip.AllToRsp(rsp);
 		}
 		// weapons later
 		session.SendPacket(rsp);

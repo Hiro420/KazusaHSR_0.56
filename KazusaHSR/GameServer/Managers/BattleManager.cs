@@ -48,16 +48,16 @@ public class BattleManager
 			uint eventId = monsterEntity.DbInfo.EventID;
 
 			var planeEvent = MainApp.resourceManager.PlaneEventExcel
-				.Where(e => e.EventId == eventId)
+				.Where(e => e.EventID == eventId)
 				.FirstOrDefault(i => i.WorldLevel == session.player.WorldLevel);
 
-			if (planeEvent == null || planeEvent.StageId == 0)
+			if (planeEvent == null || planeEvent.StageID == 0)
 			{
 				session.c.LogWarning($"Player {session.player.Uid} tried to start monster battle but event ID {eventId} not found for monster entity {entityId}");
 				continue;
 			}
 
-			CurrentStageIds.Add(planeEvent.StageId!.Value);
+			CurrentStageIds.Add(planeEvent.StageID);
 		}
 	}
 
@@ -67,7 +67,7 @@ public class BattleManager
 		this.MonsterEntityIds = new List<uint>();
 		this.AssistEntityIds = new List<uint>();
 
-		foreach (PlayerAvatar playerAvatar in session.player.GetCurrentLineup().Avatars)
+		foreach (PlayerAvatar playerAvatar in session.player.GetCurrentLineup().Avatars.Where(a => a != null))
 		{
 			AvatarEntity? avatarEntity = session.player.Scene.EntityManager.TryGetByPlayerAvatar(playerAvatar);
 			if (avatarEntity != null)
@@ -87,12 +87,12 @@ public class BattleManager
 		};
 		foreach (uint stageId in CurrentStageIds)
 		{
-			StageRow stageRow = MainApp.resourceManager.StageExcel.First(s => s.StageId == stageId);
+			StageRow stageRow = MainApp.resourceManager.StageExcel.First(s => s.StageID == stageId);
 			battleInfo.MonsterWaveLists.AddRange(
 				GetMonsterInfos(stageRow)
 			);
 		}
-		foreach (PlayerAvatar avatarInfo in session.player.GetCurrentLineup().Avatars)
+		foreach (PlayerAvatar avatarInfo in session.player.GetCurrentLineup().Avatars.Where(a => a != null))
 		{
 			battleInfo.BattleAvatarLists.Add(avatarInfo.ToBattleAvatar());
 

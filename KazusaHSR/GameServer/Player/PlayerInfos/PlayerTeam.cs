@@ -15,33 +15,52 @@ public class PlayerTeam
 	public uint CurMp { get; set; } = 5;
 	public uint MaxMp { get; set; } = 5;
 
-	public PlayerTeam(Session session, PlayerAvatar leader) // in case it's only 1 character
-	   : this(session, new List<PlayerAvatar> { leader }, leader) { }
-
-	public PlayerTeam(Session session, List<PlayerAvatar> avatars, PlayerAvatar leader)
-	{
-		this.Avatars = avatars;
-		this.Leader = leader;
-		this.Session = session;
-	}
-
 	public PlayerTeam(Session session)
 	{
-		this.Avatars = new();
 		this.Session = session;
+		this.Avatars = new List<PlayerAvatar>(4) { null, null, null, null };
+	}
+
+	public PlayerTeam(Session session, PlayerAvatar leader)
+		: this(session)
+	{
+		this.Leader = leader;
+		this.Avatars[0] = leader;
+	}
+
+	public PlayerTeam(Session session, List<PlayerAvatar> avatars, PlayerAvatar leader)
+		: this(session)
+	{
+		for (int i = 0; i < avatars.Count && i < 4; i++)
+		{
+			this.Avatars[i] = avatars[i];
+		}
+		this.Leader = leader;
 	}
 
 	public void RemoveAvatar(Session session, PlayerAvatar avatar)
 	{
-		if (this.Avatars.Count == 1)
+		int activeCount = this.Avatars.Count(a => a != null);
+		if (activeCount <= 1)
 		{
 			session.c.LogError("Cannot remove the last avatar from the team");
 			return;
 		}
-		this.Avatars.Remove(avatar);
-		if (this.Leader == avatar)
+		int index = this.Avatars.IndexOf(avatar);
+		if (index < 0)
 		{
-			this.Leader = this.Avatars[0];
+			return;
+		}
+		this.Avatars[index] = null;
+		for (int i = index; i < this.Avatars.Count - 1; i++)
+		{
+			this.Avatars[i] = this.Avatars[i + 1];
+		}
+		this.Avatars[this.Avatars.Count - 1] = null;
+
+		if (this.Leader?.AvatarId == avatar.AvatarId)
+		{
+			this.Leader = this.Avatars.FirstOrDefault(a => a != null);
 		}
 
 		session.player?.Scene.DespawnAvatarEntity(avatar);
@@ -68,14 +87,24 @@ public class PlayerTeam
 			session.c.LogError("Slot must be between 0 and 3");
 			return Retcode.RetLineupInvalidIndex;
 		}
-		PlayerAvatar oldAvatar = this.Avatars[slot];
+		PlayerAvatar oldAvatar = this.Avatars.Count > slot ? this.Avatars[slot] : null;
+		if (this.Avatars.Count <= slot)
+		{
+			while (this.Avatars.Count <= slot && this.Avatars.Count < 4)
+			{
+				this.Avatars.Add(null);
+			}
+		}
 		this.Avatars[slot] = newAvatar;
-		if (this.Leader == oldAvatar)
+		if (this.Leader == oldAvatar || this.Leader == null)
 		{
 			this.Leader = newAvatar;
 		}
 
-		session.player?.Scene.DespawnAvatarEntity(oldAvatar);
+		if (oldAvatar != null)
+		{
+			session.player?.Scene.DespawnAvatarEntity(oldAvatar);
+		}
 
 		session.player?.Scene.SpawnAvatarEntity(newAvatar);
 
@@ -86,12 +115,20 @@ public class PlayerTeam
 
 	public void AddAvatar(Session session, PlayerAvatar avatar)
 	{
-		if (this.Avatars.Count == 4)
+		if (this.Avatars.Count(a => a != null) == 4)
 		{
 			session.c.LogError("Cannot add more than 4 characters to the team"); // should never happen
 			return;
 		}
-		this.Avatars.Add(avatar);
+		int index = this.Avatars.FindIndex(a => a == null);
+		if (index >= 0)
+		{
+			this.Avatars[index] = avatar;
+		}
+		else if (this.Avatars.Count < 4)
+		{
+			this.Avatars.Add(avatar);
+		}
 
 		session.player?.Scene.SpawnAvatarEntity(avatar);
 
@@ -102,13 +139,13 @@ public class PlayerTeam
 	{
 		LineupInfo info = new LineupInfo()
 		{
-			LeaderSlot = (uint)this.Avatars.IndexOf(this.Leader!),
+			LeaderSlot = this.Leader != null ? (uint)this.Avatars.IndexOf(this.Leader) : 0,
 			Mp = this.MaxMp,
-			Index = (uint)(this.Session.player!.teamList.IndexOf(this) + 1),
+			Index = (uint)this.Session.player!.TeamManager.GetIndex(this),
 			Name = "Default Team",
 			PlaneId = Session.player.Scene.PlaneId,
 		};
-		foreach (PlayerAvatar avatar in this.Avatars)
+		foreach (PlayerAvatar avatar in this.Avatars.Where(a => a != null))
 		{
 			LineupAvatar lineupAvatar = new LineupAvatar()
 			{

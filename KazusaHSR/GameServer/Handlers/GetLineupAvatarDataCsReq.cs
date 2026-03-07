@@ -16,7 +16,7 @@ internal class HandleGetLineupAvatarDataCsReq
 		GetLineupAvatarDataCsReq req = packet.GetDecodedBody<GetLineupAvatarDataCsReq>();
 		GetLineupAvatarDataScRsp rsp = new GetLineupAvatarDataScRsp();
 		PlayerTeam playerTeam = session.player.GetCurrentLineup();
-		foreach (PlayerAvatar avatar in playerTeam.Avatars)
+		foreach (PlayerAvatar avatar in playerTeam.Avatars.Where(a => a != null))
 		{
 			rsp.AvatarDataLists.Add(new LineupAvatarData()
 			{

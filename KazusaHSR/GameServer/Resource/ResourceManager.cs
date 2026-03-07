@@ -22,8 +22,14 @@ public class ResourceManager
 	public List<MainMissionRow> MainMissionExcel { get; set; } = new();
 	public List<MazePlaneRow> MazePlaneExcel { get; set; } = new();
 	public List<InteractRow> InteractExcel { get; set; } = new();
+	public List<ItemRow> ItemConfig { get; set; } = new();
+	public List<ItemRow> ItemConfigAvatar { get; set; } = new();
+	public List<ItemRow> ItemConfigEquipment { get; set; } = new();
 	public List<MonsterRow> MonsterExcel { get; set; } = new();
 	public List<StageRow> StageExcel { get; set; } = new();
+	public List<ShopConfigRow> ShopConfig { get; set; } = new();
+	public List<ShopGoodsConfigRow> ShopGoodsConfig { get; set; } = new();
+	public List<ShopGoodsGroupConfigRow> ShopGoodsGroupConfig { get; set; } = new();
 	public List<PlaneEventRow> PlaneEventExcel { get; set; } = new();
 	public List<NpcRow> NpcExcel { get; set; } = new();
 	public List<MapEntranceRow> MapEntranceExcel { get; set; } = new();

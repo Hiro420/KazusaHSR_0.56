@@ -16,7 +16,7 @@ public class MonsterEntity : BaseEntity
 	public LevelMonsterInfo DbInfo { get; init; }
 	public uint GroupId { get; init; }
 	public uint EventId { get; set; }
-	public MonsterRow MonsterData => MainApp.resourceManager.MonsterExcel.First(m => m.MonsterId == DbInfo.NPCMonsterID);
+	public MonsterRow MonsterData => MainApp.resourceManager.MonsterExcel.First(m => m.MonsterID == DbInfo.NPCMonsterID);
 
 	public MonsterEntity(Session session, LevelMonsterInfo _levelMonsterInfo, uint groupId) : base(
 		session,

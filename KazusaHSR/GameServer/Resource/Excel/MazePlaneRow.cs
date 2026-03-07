@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,12 +8,12 @@ namespace KazusaHSR.GameServer.Resource.Excel;
 
 public class MazePlaneRow
 {
-	public uint PlaneId { get; set; }
-	public string PlaneType { get; set; }
+	public uint PlaneID { get; set; }
+	public PlaneType PlaneType { get; set; }
 	public uint SubType { get; set; }
-	public uint HpPoolType { get; set; }
-	public uint MapId { get; set; }
+	public uint HPPoolType { get; set; }
+	public uint MapID { get; set; }
 	public string PlaneName { get; set; }
-	public uint StartFloorId { get; set; }
-	public List<uint> FloorIdList { get; set; }
+	public uint StartFloorID { get; set; }
+	public uint[] FloorIDList { get; set; }
 }

@@ -26,13 +26,19 @@ public class Player
 	public Dictionary<ulong, PlayerAvatar> avatarDict { get; set; } = new();
 	//public Dictionary<ulong, PlayerWeapon> weaponDict { get; set; }
 	public Dictionary<ulong, PlayerItem> itemDict { get; set; } = new();
+	public uint LastItemGuid { get; set; }
 	public Protocol.Vector Pos { get; private set; }
 	public Protocol.Vector Rot { get; private set; } // wont actually be used except for scene tp
-	public List<PlayerTeam> teamList { get; set; } = new();
+	public List<PlayerTeam> teamList { get; set; } = new(4);
+	// todo
+	//public PlayerTeam ExtraLineup { get; set; } = new PlayerTeam(null!); // for virtual avatars and such, not persisted
 	public uint TeamIndex { get; set; } = 0;
 	public Scene Scene { get; set; }
 	public uint Exp { get; set; }
 	public BattleManager battleManager { get; set; }
+	public TeamManager TeamManager { get; }
+	public ItemManager ItemManager { get; }
+	public ShopManager ShopManager { get; set; }
 
 	public Player(Session session, uint uid)
 	{
@@ -45,6 +51,16 @@ public class Player
 		this.Scene = new Scene(session, 10101, 10101001, 0, false); // LevelGroup_P10101_F10101001_G1
 		(this.Pos, this.Rot) = this.Scene.GetDefaultSpawnPosAndRot();
 		battleManager = new BattleManager(session);
+		TeamManager = new TeamManager(this);
+		ItemManager = new ItemManager(this);
+		ShopManager = new ShopManager(this);
+		LastItemGuid = 0; // Initialize LastItemGuid
+	}
+
+	public uint GetNextItemGuid()
+	{
+		LastItemGuid++;
+		return LastItemGuid;
 	}
 
 	public void SavePersistent()
@@ -79,20 +95,56 @@ public class Player
 	{
 		foreach (AvatarRow avatarRow in MainApp.resourceManager.AvatarExcel)
 		{
-			if (avatarRow.Release == false || avatarRow.AvatarId == 1007)
+			if (avatarRow.AvatarID == 1007)
 				continue;
-			PlayerAvatar playerAvatar = new(session, avatarRow.AvatarId);
+			if (avatarRow.Release == false && MainApp.config.GameServer.AllowTestCharacters)
+				continue;
+			PlayerAvatar playerAvatar = new(session, avatarRow.AvatarID);
 			this.avatarDict.Add(playerAvatar.Guid, playerAvatar);
-			if (this.GetCurrentLineup().Avatars.Count < 4)
+			if (this.GetCurrentLineup().Avatars.Count(a => a != null) < 4)
 				this.GetCurrentLineup().AddAvatar(session, playerAvatar);
+		}
+	}
+
+	public void GiveAllItems()
+	{
+		if (session.player.itemDict.Count > 0)
+		{
+			//logger.LogWarning("Player already has items, skipping GiveAllItems to avoid duplicates.");
+			return;
+		}
+		// Add normal items, not including equipment for now
+		foreach (ItemRow itemRow in MainApp.resourceManager.ItemConfig)
+		{
+			if (itemRow.ID == 0)
+				continue;
+
+			switch (itemRow.ItemType)
+			{
+				case Resource.Excel.ItemType.Virtual:
+				case Resource.Excel.ItemType.Material:
+				case Resource.Excel.ItemType.Gift:
+				case Resource.Excel.ItemType.Mission:
+				case Resource.Excel.ItemType.Book:
+				case Resource.Excel.ItemType.Food:
+					PlayerItem playerItem = new(session, itemRow.ID);
+					//playerItem.Count = itemRow.PileLimit != 0 ? itemRow.PileLimit : 999;
+					playerItem.Count = Math.Min(itemRow.PileLimit, 100);
+					this.itemDict.Add(playerItem.Guid, playerItem);
+					break;
+				default:
+					// skip other item types for now
+					break;
+			}
 		}
 	}
 
 	public void InitTeams()
 	{
-		for (int i = 0; i < 4; i++) // maybe later change to use config for max teams amount
+		TeamManager.Clear();
+		for (int i = 0; i < 4; i++)
 		{
-			this.teamList.Add(new PlayerTeam(session));
+			TeamManager.AddTeam(new PlayerTeam(session));
 		}
 	}
 
@@ -124,7 +176,7 @@ public class Player
 
 	public PlayerTeam GetCurrentLineup()
 	{
-		return this.teamList[(int)this.TeamIndex];
+		return TeamManager.GetTeamByIndex((int)this.TeamIndex);
 	}
 
 	public uint GetLeaderEntityId()

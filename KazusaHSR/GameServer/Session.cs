@@ -79,6 +79,7 @@ public class Session
 			.LoadOrCreatePlayerAsync(this, AccountId, Token, AccountUid)
 			.GetAwaiter()
 			.GetResult();
+		player.GiveAllItems();
 		player.Scene.AddAllEntities();
 
 		AbilityManager = new AbilityManager(this);

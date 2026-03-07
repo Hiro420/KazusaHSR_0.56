@@ -37,12 +37,12 @@ internal class HandleInteractPropCsReq
 			return;
 		}
 
-		InteractRow interactRow = MainApp.resourceManager.InteractExcel.First(i => i.InteractId == req.InteractId);
+		InteractRow interactRow = MainApp.resourceManager.InteractExcel.First(i => i.InteractID == req.InteractId);
 
 		// todo: handle item costs. for now just change the state
-		if (prop.State == interactRow.SrcState)
+		if (prop.State == (Resource.PropState)interactRow.SrcState)
 		{
-			prop.State = interactRow.TargetState;
+			prop.State = (Resource.PropState)interactRow.TargetState;
 		}
 
 		InteractPropScRsp rsp = new InteractPropScRsp()

@@ -92,7 +92,7 @@ public class DatabaseManager
             player.AddBasicAvatar();
             player.GiveAllAvatars();
 
-            await SavePlayerAsync(accountId, token, player).ConfigureAwait(false);
+			await SavePlayerAsync(accountId, token, player).ConfigureAwait(false);
             return player;
         }
 
@@ -164,6 +164,8 @@ public class AccountDocument
 
     public uint TeamIndex { get; set; }
 
+    public uint LastItemGuid { get; set; }
+
     public SceneData Scene { get; set; } = new();
     public VectorData Position { get; set; } = new();
     public VectorData Rotation { get; set; } = new();
@@ -186,6 +188,7 @@ public class AccountDocument
             WorldLevel = player.WorldLevel,
             Exp = player.Exp,
             TeamIndex = player.TeamIndex,
+            LastItemGuid = player.LastItemGuid,
             Scene = new SceneData
             {
                 PlaneId = player.Scene.PlaneId,
@@ -195,8 +198,8 @@ public class AccountDocument
             Position = VectorData.FromProto(player.Pos),
             Rotation = VectorData.FromProto(player.Rot),
             Avatars = player.avatarDict.Values.Select(PlayerAvatarData.FromAvatar).ToList(),
-            Items = player.itemDict.Values.Select(PlayerItemData.FromItem).ToList(),
-            Teams = player.teamList.Select(PlayerTeamData.FromTeam).ToList(),
+            Items = player.ItemManager.Items.Select(PlayerItemData.FromItem).ToList(),
+            Teams = player.TeamManager.Teams.Select(PlayerTeamData.FromTeam).ToList(),
         };
 
         return doc;
@@ -212,11 +215,12 @@ public class AccountDocument
             Level = this.Level,
             WorldLevel = this.WorldLevel,
             Exp = this.Exp,
+            LastItemGuid = this.LastItemGuid,
         };
 
         player.avatarDict.Clear();
-        player.itemDict.Clear();
-        player.teamList.Clear();
+        player.ItemManager.Clear();
+        player.TeamManager.Clear();
 
         var avatarsById = new Dictionary<uint, PlayerAvatar>();
         foreach (var avatarData in Avatars)
@@ -229,7 +233,7 @@ public class AccountDocument
         foreach (var itemData in Items)
         {
             var item = itemData.ToItem(session);
-            player.itemDict[item.Guid] = item;
+            player.ItemManager.AddFromPersistence(item);
         }
         foreach (var teamData in Teams)
         {
@@ -239,11 +243,11 @@ public class AccountDocument
             {
                 if (avatarsById.TryGetValue(avatarId, out var avatar))
                 {
-                    team.Avatars.Add(avatar);
+                    team.AddAvatar(session, avatar);
                 }
             }
 
-            if (team.Avatars.Count > 0 && avatarsById.TryGetValue(teamData.LeaderAvatarId, out var leader))
+            if (team.Avatars.Any(a => a != null) && avatarsById.TryGetValue(teamData.LeaderAvatarId, out var leader))
             {
                 team.SetLeader(session, leader);
             }
@@ -251,15 +255,12 @@ public class AccountDocument
             team.CurMp = teamData.CurMp;
             team.MaxMp = teamData.MaxMp;
 
-            player.teamList.Add(team);
+            player.TeamManager.AddTeam(team);
         }
 
-        if (player.teamList.Count == 0)
-        {
-            player.teamList.Add(new PlayerTeam(session));
-        }
+        player.TeamManager.EnsureAtLeastOneTeam();
 
-        if (TeamIndex >= player.teamList.Count)
+        if (TeamIndex >= player.TeamManager.TeamCount)
         {
             player.TeamIndex = 0;
         }
@@ -340,7 +341,7 @@ public class PlayerAvatarData
 
     public PlayerAvatar ToAvatar(Session session)
     {
-        var avatar = new PlayerAvatar(session, AvatarId)
+		var avatar = new PlayerAvatar(session, AvatarId)
         {
             Level = this.Level,
             Rank = this.Rank,
@@ -358,6 +359,7 @@ public class PlayerAvatarData
 
 public class PlayerItemData
 {
+    public uint Guid { get; set; }
     public uint ItemId { get; set; }
     public uint Count { get; set; }
 
@@ -365,6 +367,7 @@ public class PlayerItemData
     {
         return new PlayerItemData
         {
+			Guid = item.Guid,
             ItemId = item.ItemId,
             Count = item.Count,
         };
@@ -372,7 +375,7 @@ public class PlayerItemData
 
     public PlayerItem ToItem(Session session)
     {
-        var item = new PlayerItem(session, ItemId)
+		var item = new PlayerItem(session, ItemId, Guid)
         {
             Count = this.Count,
         };
@@ -396,7 +399,7 @@ public class PlayerTeamData
             CurMp = team.CurMp,
             MaxMp = team.MaxMp,
             LeaderAvatarId = team.Leader?.AvatarId ?? 0,
-            AvatarIds = team.Avatars.Select(a => a.AvatarId).ToList(),
+			AvatarIds = team.Avatars.Where(a => a != null).Select(a => a.AvatarId).ToList(),
         };
     }
 }

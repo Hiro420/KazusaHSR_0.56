@@ -24,7 +24,7 @@ internal class HandleStartCocoonStageCsReq
 			session.SendPacket(errorRsp);
 			return;
 		}
-		IEnumerable<CocoonRow> cocoonRows = MainApp.resourceManager.CocoonExcel.Where(c => c.Id == req.CocoonId);
+		IEnumerable<CocoonRow> cocoonRows = MainApp.resourceManager.CocoonExcel.Where(c => c.ID == req.CocoonId);
 		if (!cocoonRows.Any())
 		{
 			session.c.LogWarning($"Player {session.player.Uid} tried to start cocoon stage with invalid cocoon ID {req.CocoonId}");
@@ -46,7 +46,7 @@ internal class HandleStartCocoonStageCsReq
 			session.SendPacket(errorRsp);
 			return;
 		}
-		session.player.battleManager.StartCocoonBattle(matchingRow.StageId, req.PropEntityId);
+		session.player.battleManager.StartCocoonBattle(matchingRow.StageID, req.PropEntityId);
 		StartCocoonStageScRsp rsp = new StartCocoonStageScRsp()
 		{
 			PropEntityId = req.PropEntityId,
