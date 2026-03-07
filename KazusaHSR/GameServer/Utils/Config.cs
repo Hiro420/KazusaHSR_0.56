@@ -22,11 +22,11 @@ public class Config
         }
 
         string jsonContent = System.IO.File.ReadAllText(filePath);
-		// in case there are new options added in the future, we can just overwrite the config file with the new options without losing the old options
-		File.WriteAllText(filePath, JsonConvert.SerializeObject(new Config(), Formatting.Indented));
-		return JsonConvert.DeserializeObject<Config>(jsonContent)!;
-
-	}
+        // in case there are new options added in the future, we can just overwrite the config file with the new options without losing the old options
+        Config data = JsonConvert.DeserializeObject<Config>(jsonContent)!;
+        File.WriteAllText(filePath, JsonConvert.SerializeObject(data, Formatting.Indented));
+        return data;
+    }
 }
 
 public class LogOptionInfo
