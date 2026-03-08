@@ -57,8 +57,6 @@ public class ChallengeManager
 
 	internal void SetStarsFromPersistence(uint challengeId, uint stars)
 	{
-		if (stars > 3)
-			stars = 3;
 		_challenges[challengeId] = new PlayerChallenge
 		{
 			ChallengeId = challengeId,
@@ -315,7 +313,6 @@ public class ChallengeManager
 
 		uint rounds = _lastRoundCnt;
 		uint starMask = 0;
-		uint stars = 0;
 
 		int index = 0;
 		foreach (var kvp in _challengeTargetConfigs)
@@ -337,14 +334,13 @@ public class ChallengeManager
 
 			if (completed)
 			{
-				stars++;
 				starMask |= (1u << index);
 			}
 
 			index++;
 		}
 
-		SetStars(challengeId, stars);
+		SetStars(challengeId, starMask);
 
 		notify.ChallengeId = challengeId;
 		notify.IsWin = true;
