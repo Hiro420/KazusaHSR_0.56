@@ -24,9 +24,10 @@ public class PlayerAvatar
 	public uint Hp { get; set; }
 	public uint MaxHp { get; set; }
 	public uint SP { get; set; }
-	public ulong EquipGuid { get; set; }
+	public uint EquipGuid { get; set; }
 	public uint PromoteLevel { get; set; }
 	public uint SkillCastCnt { get; set; }
+	public Dictionary<uint, uint> SkilltreeLists { get; set; }
 
 	public PlayerAvatar(Session session, uint AvatarId, uint? tid = null)
 	{
@@ -34,6 +35,7 @@ public class PlayerAvatar
 		this.Guid = session.GetGuid();
 		this.AvatarId = AvatarId;
 		this.AvatarExcel = resourceManager.AvatarExcel.Find(a => a.AvatarID == AvatarId)!;
+		this.SkilltreeLists = InitSkillTree();
 		this.Level = 80;
 		this.Exp = 0;
 		this.PromoteLevel = 5;
@@ -55,12 +57,40 @@ public class PlayerAvatar
 			EquipmentUniqueId = (uint)this.EquipGuid,
 			Rank = this.Rank,
 		};
+		avatar.SkilltreeLists.AddRange(this.GetSkillLists());
 		return avatar;
 	}
 
 	public uint GetMaxHp()
 	{
 		uint baseMaxHp = GetBaseMaxHp();
+		foreach (KeyValuePair<uint, uint> item in this.SkilltreeLists)
+		{
+			if (item.Value == 0)
+				continue; // skill tree point not unlocked, skip
+			AvatarSkillTreeRow? treeRow = resourceManager.AvatarSkillTreeExcel.Where(s => 
+				s.PointID == item.Key && 
+				s.Level == item.Value
+			).FirstOrDefault();
+			if (treeRow != null)
+			{
+				foreach (AbilityPropertyValue statusAdd in treeRow.StatusAddList)
+				{
+					switch (statusAdd.PropertyType)
+					{
+						case AvatarPropertyType.HPAddedRatio:
+							baseMaxHp = (uint)(baseMaxHp * (1 + statusAdd.Value.Value));
+							break;
+							// maybe add other types in the future if needed for other stats
+					}
+				}
+			}
+			else
+			{
+				Session.c.LogWarning(
+					$"No AvatarSkillTreeRow config found for PointID {item.Key} with Level {item.Value}");
+			}
+		}
 
 		// todo: get from relics and lightcone
 
@@ -108,8 +138,50 @@ public class PlayerAvatar
 			Hp = this.Hp * 1000,
 			Sp = this.SP * 1000,
 			Promotion = this.PromoteLevel,
-			// todo: equipment etc
 		};
+		if (this.EquipGuid != 0 && Session.player.itemDict.TryGetValue(this.EquipGuid, out PlayerItem? item))
+		{
+			if (item is not ItemLightcone lightcone)
+			{
+				Session.c.LogError($"Unexpected equip type for item {this.EquipGuid} on avatar {this.AvatarId}. Expected ItemLightcone, got {item.GetType().Name}");
+			}
+			else
+			{
+				battleAvatar.EquipmentLists.Add(lightcone.ToBattleEquipment());
+			}
+		}
+		battleAvatar.SkilltreeLists.AddRange(this.GetSkillLists());
 		return battleAvatar;
+	}
+
+	public List<Protocol.AvatarSkillTree> GetSkillLists()
+	{
+		List<Protocol.AvatarSkillTree> skillTrees = new List<Protocol.AvatarSkillTree>();
+		foreach (var kvp in this.SkilltreeLists)
+		{
+			if (kvp.Value == 0)
+				continue; // skill tree point not unlocked, skip
+			skillTrees.Add(new Protocol.AvatarSkillTree
+			{
+				PointId = kvp.Key,
+				Level = kvp.Value
+			});
+		}
+		return skillTrees;
+	}
+
+	public Dictionary<uint, uint> InitSkillTree()
+	{
+		Dictionary<uint, uint> skillTree = new();
+
+		foreach (var group in resourceManager.AvatarSkillTreeExcel
+			.Where(s => s.AvatarID == this.AvatarId && s.Level == 1)
+			.GroupBy(a => a.PointID))
+		{
+			var firstRow = group.First();
+			skillTree[group.Key] = firstRow.DefaultUnlock ? 1u : 0u;
+		}
+
+		return skillTree;
 	}
 }

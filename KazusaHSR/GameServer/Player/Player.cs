@@ -25,7 +25,7 @@ public class Player
 	public uint Uid { get; set; }
 	public Dictionary<ulong, PlayerAvatar> avatarDict { get; set; } = new();
 	//public Dictionary<ulong, PlayerWeapon> weaponDict { get; set; }
-	public Dictionary<ulong, PlayerItem> itemDict { get; set; } = new();
+	public Dictionary<uint, PlayerItem> itemDict { get; set; } = new();
 	public uint LastItemGuid { get; set; }
 	public Protocol.Vector Pos { get; private set; }
 	public Protocol.Vector Rot { get; private set; } // wont actually be used except for scene tp
@@ -121,21 +121,36 @@ public class Player
 
 			switch (itemRow.ItemType)
 			{
-				case Resource.Excel.ItemType.Virtual:
 				case Resource.Excel.ItemType.Material:
 				case Resource.Excel.ItemType.Gift:
 				case Resource.Excel.ItemType.Mission:
 				case Resource.Excel.ItemType.Book:
 				case Resource.Excel.ItemType.Food:
-					PlayerItem playerItem = new(session, itemRow.ID);
-					//playerItem.Count = itemRow.PileLimit != 0 ? itemRow.PileLimit : 999;
-					playerItem.Count = Math.Min(itemRow.PileLimit, 100);
-					this.itemDict.Add(playerItem.Guid, playerItem);
+					PlayerItem playerItemfood = new(session, itemRow.ID);
+					playerItemfood.Count = Math.Min(itemRow.PileLimit, 100);
+					this.itemDict.Add(playerItemfood.Guid, playerItemfood);
+					break;
+				case Resource.Excel.ItemType.Virtual:
+					if (itemRow.ID == 0)
+						continue;
+					PlayerItem playerVItem = new(session, itemRow.ID);
+					playerVItem.Count = itemRow.PileLimit != 0 ? itemRow.PileLimit : 999;
+					this.itemDict.Add(playerVItem.Guid, playerVItem);
 					break;
 				default:
 					// skip other item types for now
 					break;
 			}
+		}
+
+		foreach (ItemRow itemRow in MainApp.resourceManager.ItemConfigEquipment)
+		{
+			if (itemRow.ID == 0)
+				continue;
+
+			ItemLightcone equipItem = new(session, itemRow.ID);
+			equipItem.Count = 1; // equipment items are not stackable
+			this.itemDict.Add(equipItem.Guid, equipItem);
 		}
 	}
 
@@ -271,5 +286,25 @@ public class Player
 			}
 		}
 		maze = this.Scene.ToMazeProto();
+	}
+
+	public void EquipLightcone(PlayerAvatar avatar, ItemLightcone lightcone)
+	{
+		if (avatar == null || lightcone == null)
+			return;
+		avatar.EquipGuid = lightcone.Guid;
+		lightcone.BelongAvatarId = avatar.AvatarId;
+		this.SavePersistent();
+	}
+
+	public void UnequipLightcone(PlayerAvatar avatar, ItemLightcone lightcone)
+	{
+		if (avatar == null || lightcone == null)
+			return;
+		if (avatar.EquipGuid != lightcone.Guid)
+			return; // lightcone not currently equipped to this avatar
+		avatar.EquipGuid = 0;
+		lightcone.BelongAvatarId = 0;
+		this.SavePersistent();
 	}
 }

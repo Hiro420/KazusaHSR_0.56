@@ -22,5 +22,6 @@ internal class HandleBuyGoodsCsReq
 		rsp.Retcode = (uint)session.player.ShopManager.BuyGood(req.ShopId, req.GoodsId, req.GoodsNum);
 		rsp.GoodsBuyTimes = session.player.ShopManager.GetGoodsBuyTimes(req.ShopId, req.GoodsId);
 		session.SendPacket(rsp);
+		session.player.SavePersistent();
 	}
 }

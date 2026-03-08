@@ -22,26 +22,42 @@ public class ItemManager
         return _player.itemDict.Values.FirstOrDefault(i => i.Guid == guid);
     }
 
-    public PlayerItem AddItem(uint itemId, uint count)
+    public PlayerItem AddItem(uint itemId, uint count, uint level = 1)
     {
         if (count == 0)
             throw new ArgumentOutOfRangeException(nameof(count));
 
+        bool isLightcone = MainApp.resourceManager.ItemConfigEquipment.Any(i => i.ID == itemId);
+
         PlayerItem? existing = _player.itemDict.Values.FirstOrDefault(i => i.ItemId == itemId);
-        if (existing != null)
+        if (existing != null && !isLightcone)
         {
             existing.Count += count;
             _player.SavePersistent();
             return existing;
         }
 
-        var item = new PlayerItem(_player.Session, itemId, _player.GetNextItemGuid())
+        PlayerItem item;
+        if (isLightcone)
         {
-            Count = count
-        };
+            item = new ItemLightcone(_player.Session, itemId)
+            {
+                Count = count,
+                Level = level,
+            };
+        }
+        else
+        {
+            item = new PlayerItem(_player.Session, itemId)
+            {
+                Count = count,
+                Level = level,
+            };
+        }
         _player.itemDict[item.Guid] = item;
         _player.SavePersistent();
-        return item;
+		SendSync(item);
+		return item;
     }
 
     public bool RemoveItemByGuid(uint guid, uint count)
@@ -73,4 +89,19 @@ public class ItemManager
         if (item == null) throw new ArgumentNullException(nameof(item));
         _player.itemDict[item.Guid] = item;
     }
+
+    public void SendSync(PlayerItem item)
+    {
+        PlayerSyncScNotify notify = new PlayerSyncScNotify();
+        switch (item)
+		{
+			case ItemLightcone ligthcone:
+                notify.EquipmentLists.Add(ligthcone.ToEquipmentProto());
+				break;
+			case PlayerItem _:
+                notify.MaterialLists.Add(item.ToMaterialProto());
+				break;
+        }
+		_player.Session.SendPacket(notify);
+	}
 }

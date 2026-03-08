@@ -54,5 +54,6 @@ internal class HandleSwitchLineupIndexCsReq
 		}
 		session.player.SendSyncLineupNotify();
 		session.SendPacket(rsp);
+		session.player.SavePersistent();
 	}
 }

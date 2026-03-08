@@ -36,6 +36,7 @@ public class ResourceLoader
 		// Load excels/configs here
 		this._resourceManager.AvatarExcel = LoadExcel<AvatarRow>("AvatarConfig");
 		this._resourceManager.AvatarSkillExcel = LoadExcel<AvatarSkillRow>("AvatarSkillConfig");
+		this._resourceManager.AvatarSkillTreeExcel = LoadExcel<AvatarSkillTreeRow>("AvatarSkillTreeConfig");
 		this._resourceManager.AvatarPromotionExcel = LoadExcel<AvatarPromotionRow>("AvatarPromotionConfig");
 		this._resourceManager.TutorialExcel = LoadExcel<TutorialRow>("TutorialData");
 		this._resourceManager.TutorialGuideExcel = LoadExcel<TutorialGuideRow>("TutorialGuideData");

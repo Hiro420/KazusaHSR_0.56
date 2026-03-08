@@ -322,8 +322,10 @@ public class PlayerAvatarData
     public uint Sp { get; set; }
     public uint PromoteLevel { get; set; }
     public uint SkillCastCnt { get; set; }
+    public uint EquipGuid { get; set; }
+	public Dictionary<string, uint> SkilltreeLists { get; set; }
 
-    public static PlayerAvatarData FromAvatar(PlayerAvatar avatar)
+	public static PlayerAvatarData FromAvatar(PlayerAvatar avatar)
     {
         return new PlayerAvatarData
         {
@@ -336,7 +338,9 @@ public class PlayerAvatarData
             Sp = avatar.SP,
             PromoteLevel = avatar.PromoteLevel,
             SkillCastCnt = avatar.SkillCastCnt,
-        };
+            SkilltreeLists = avatar.SkilltreeLists.ToDictionary(kv => kv.Key.ToString(), kv => kv.Value),
+            EquipGuid = avatar.EquipGuid,
+		};
     }
 
     public PlayerAvatar ToAvatar(Session session)
@@ -351,7 +355,9 @@ public class PlayerAvatarData
             SP = this.Sp,
             PromoteLevel = this.PromoteLevel,
             SkillCastCnt = this.SkillCastCnt,
-        };
+            SkilltreeLists = this.SkilltreeLists.ToDictionary(kv => uint.Parse(kv.Key), kv => kv.Value),
+            EquipGuid = this.EquipGuid,
+		};
 
         return avatar;
     }
@@ -362,22 +368,57 @@ public class PlayerItemData
     public uint Guid { get; set; }
     public uint ItemId { get; set; }
     public uint Count { get; set; }
+    public uint Level { get; set; }
+    public uint Exp { get; set; }
+    public uint Rank { get; set; }
+    public uint BelongAvatarId { get; set; }
+    public bool IsProtected { get; set; }
+    public uint Promotion { get; set; }
 
     public static PlayerItemData FromItem(PlayerItem item)
     {
-        return new PlayerItemData
+        var data = new PlayerItemData
         {
-			Guid = item.Guid,
+            Guid = item.Guid,
             ItemId = item.ItemId,
             Count = item.Count,
+            Level = item.Level,
         };
+
+        if (item is ItemLightcone lightcone)
+        {
+            data.Exp = lightcone.Exp;
+            data.Rank = lightcone.Rank;
+            data.BelongAvatarId = lightcone.BelongAvatarId;
+            data.IsProtected = lightcone.IsProtected;
+            data.Promotion = lightcone.Promotion;
+        }
+
+        return data;
     }
 
     public PlayerItem ToItem(Session session)
     {
-		var item = new PlayerItem(session, ItemId, Guid)
+        bool isLightcone = MainApp.resourceManager.ItemConfigEquipment.Any(i => i.ID == ItemId);
+        if (isLightcone)
+        {
+            var lightcone = new ItemLightcone(session, ItemId, Guid)
+            {
+                Count = this.Count,
+                Level = this.Level,
+                Exp = this.Exp,
+                Rank = this.Rank,
+                BelongAvatarId = this.BelongAvatarId,
+                IsProtected = this.IsProtected,
+                Promotion = this.Promotion,
+            };
+            return lightcone;
+        }
+
+        var item = new PlayerItem(session, ItemId, Guid)
         {
             Count = this.Count,
+            Level = this.Level,
         };
 
         return item;

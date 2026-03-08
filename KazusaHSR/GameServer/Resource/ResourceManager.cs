@@ -16,6 +16,7 @@ public class ResourceManager
 	public ResourceLoader loader;
 	public List<AvatarRow> AvatarExcel { get; set; } = new();
 	public List<AvatarSkillRow> AvatarSkillExcel { get; set; } = new();
+	public List<AvatarSkillTreeRow> AvatarSkillTreeExcel { get; set; } = new();
 	public List<AvatarPromotionRow> AvatarPromotionExcel { get; set; } = new();
 	public List<TutorialRow> TutorialExcel { get; set; } = new();
 	public List<TutorialGuideRow> TutorialGuideExcel { get; set; } = new();
@@ -68,5 +69,15 @@ public class ResourceManager
 			return config;
 		}
 		return null;
+	}
+
+	public ItemRow? GetItemRowById(uint itemId)
+	{
+		ItemRow? row = ItemConfig.FirstOrDefault(i => i.ID == itemId);
+		if (row == null)
+			row = ItemConfigAvatar.FirstOrDefault(i => i.ID == itemId);
+		if (row == null)
+			row = ItemConfigEquipment.FirstOrDefault(i => i.ID == itemId);
+		return row;
 	}
 }

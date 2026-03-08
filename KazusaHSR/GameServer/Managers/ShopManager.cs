@@ -47,20 +47,24 @@ public class ShopManager
         if (itemInfo == null)
             return Retcode.RetGoodsNotOpen;
 
-        if (count == 0 || count > itemInfo.Count)
-            return Retcode.RetItemCountInvalid;
+		if (count == 0)
+			return Retcode.RetItemCountInvalid;
 
-        PlayerItem? playerItem = _player.ItemManager.Items.FirstOrDefault(i => i.ItemId == itemInfo.ItemId);
-        if (playerItem != null && playerItem.Count + count > Math.Min(playerItem.ItemConfig.PileLimit, 999))
+		if (itemInfo.SourceRow.LimitTimes != 0 &&
+			count + itemInfo.BoughtTimes > itemInfo.SourceRow.LimitTimes)
+			return Retcode.RetItemCountInvalid;
+
+		PlayerItem? playerItem = _player.ItemManager.Items.FirstOrDefault(i => i.ItemId == itemInfo.ItemId);
+        if (playerItem != null && playerItem.Count + count > Math.Min(playerItem.ItemConfig!.PileLimit, 999))
             return Retcode.RetItemExceedLimit;
 
 		// Check if player has enough currency
 		foreach (var price in itemInfo.Price)
         {
             var shopItem = _player.ItemManager.Items.FirstOrDefault(i => i.ItemId == price.Key);
-            if (shopItem == null || shopItem.Count < price.Value + count)
-                return Retcode.RetItemCostNotEnough;
-        }
+			if (shopItem == null || shopItem.Count < price.Value * count)
+				return Retcode.RetItemCostNotEnough;
+		}
 
         // Deduct currency | TODO
         //foreach (var price in itemInfo.Price)
@@ -72,11 +76,15 @@ public class ShopManager
         //}
 
 		// Add item to player's inventory
-        ItemRow? itemRow = MainApp.resourceManager.ItemConfig.FirstOrDefault(i => i.ID == itemInfo.ItemId);
+        ItemRow? itemRow = MainApp.resourceManager.GetItemRowById(itemInfo.ItemId);
         if (itemRow != null)
-		{
+        {
             // likely avatar/equipment. we will implement this later
-			_player.ItemManager.AddItem(itemInfo.ItemId, itemInfo.Count * count);
+            _player.ItemManager.AddItem(itemInfo.ItemId, itemInfo.Count * count, itemInfo.SourceRow.Level);
+        }
+        else
+        {
+            _player.Session.c.LogError($"ItemID {itemInfo.ItemId} not found in ItemRow, cannot add to inventory");
 		}
 
         if (itemInfo.BoughtTimes < itemInfo.SourceRow.LimitTimes && itemInfo.SourceRow.LimitTimes != 0)
@@ -161,7 +169,7 @@ public class ShopItemInfo
 	public ShopItemInfo(ShopGoodsConfigRow row)
     {
         ItemId = row.ItemID;
-        Count = row.ItemCount;
+        Count = row.ItemCount != 0 ? row.ItemCount : 1;
         for (int i = 0; i < row.CurrencyList.Length; i++)
         {
             if (i >= row.CurrencyList.Length || i >= row.CurrencyCostList.Length)

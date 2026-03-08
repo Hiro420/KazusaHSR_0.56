@@ -12,43 +12,38 @@ namespace KazusaHSR.GameServer.PlayerInfos;
 public class PlayerItem
 {
 	public Session Session { get; set; } // just in case ill need it
-	public ItemRow ItemConfig { get; set; }
+	public ItemRow? ItemConfig => MainApp.resourceManager.GetItemRowById(this.ItemId);
 	public uint Guid { get; set; }
 	public uint ItemId { get; set; }
 	public uint Count { get; set; }
+	public uint Level { get; set; }
 
 	public PlayerItem(Session session, uint materialId, uint? tid = null)
 	{
+		this.ItemId = materialId;
 		this.Session = session;
 		//this.ItemConfig = MainApp.resourceManager.ItemConfig.First(i => i.ID == materialId);
-		this.ItemId = materialId;
 		this.Count = 1;
 		this.Guid = tid ?? session.player.GetNextItemGuid();
-
-		Initialize();
-	}
-
-	public virtual void Initialize()
-	{
-		ItemRow? itemRow = MainApp.resourceManager.ItemConfig.FirstOrDefault(i => i.ID == ItemId);
-		if (itemRow == null)
-		{
-			itemRow = MainApp.resourceManager.ItemConfigAvatar.FirstOrDefault(i => i.ID == ItemId);
-		}
-		if (itemRow == null)
-		{
-			itemRow = MainApp.resourceManager.ItemConfigEquipment.First(i => i.ID == ItemId);
-		}
-		this.ItemConfig = itemRow;
+		this.Level = 1;
 	}
 
 	public virtual void AllToRsp(GetBagScRsp rsp)
 	{
-		Material info = new Material()
+		rsp.MaterialLists.Add(ToMaterialProto());
+	}
+
+	public virtual void AddToSync(PlayerSyncScNotify ntf)
+	{
+		ntf.MaterialLists.Add(ToMaterialProto());
+	}
+
+	public virtual Material ToMaterialProto()
+	{
+		return new Material()
 		{
-			Num = this.Count,
-			Tid = this.ItemId
+			Tid = this.ItemId,
+			Num = this.Count
 		};
-		rsp.MaterialLists.Add(info);
 	}
 }
