@@ -22,6 +22,14 @@ public sealed class AdventureAbilityContext
 		Request = request;
 		Response = response;
 	}
+
+	public BaseEntity? GetAbilityEntity()
+	{
+		if (Request.AbilityTargetEntityId == 0)
+			return null;
+		Session.player.Scene.EntityManager.TryGet(Request.AbilityTargetEntityId, out BaseEntity? entity);
+		return entity;
+	}
 }
 
 // OH OH THIS IS THE GOOD STUFF
@@ -95,13 +103,11 @@ public sealed class AdventureTaskExecutor
 		if (predicate == null)
 			return true;
 
-		// TODO?
+		// TODO: add more
 		switch (predicate)
 		{
 			case ByHaveAbilityTarget:
-				// Stub for now, we will implement it later
-				_ctx.Session.c.LogInfo("[AdventureTaskExecutor] ByHaveAbilityTarget -> true (stub)");
-				return true;
+				return _ctx.GetAbilityEntity() != null;
 			default:
 				_ctx.Session.c.LogInfo($"[AdventureTaskExecutor] Unhandled predicate type: {predicate.GetType().FullName}, default=true");
 				return true;
@@ -130,6 +136,10 @@ public sealed class AdventureTaskExecutor
 			.Distinct()
 			.Where(id => entities.TryGetValue(id, out var ent) && ent is MonsterEntity);
 
+		IEnumerable<uint> hitPropIds = (req.HitTargetEntityIdLists ?? Array.Empty<uint>())
+			.Distinct()
+			.Where(id => entities.TryGetValue(id, out var ent) && ent is PropEntity);
+
 		IEnumerable<uint> assistMonsterIds = (req.AssistMonsterEntityIdLists ?? Array.Empty<uint>())
 			.Distinct()
 			.Where(id => entities.TryGetValue(id, out var ent) && ent is MonsterEntity);
@@ -139,6 +149,16 @@ public sealed class AdventureTaskExecutor
 			ExecuteTasks(config.OnAttack);
 			session.player.battleManager.StartMonsterBattle(hitMonsterIds, assistMonsterIds);
 			rsp.BattleInfo = session.player.battleManager.GetCurrentBattleInfo();
+		}
+		foreach (uint propGuid in hitPropIds)
+		{
+			PropEntity? propEntity = entities[propGuid] as PropEntity;
+			if (propEntity == null)
+			{
+				session.c.LogWarning($"Prop {propGuid} is not a valid PropEntity? WTF?");
+				continue;
+			}
+			session.player.Scene.LevelGraphExecutor?.OnPropBeHit(propEntity);
 		}
 	}
 

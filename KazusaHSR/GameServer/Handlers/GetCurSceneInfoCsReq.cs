@@ -4,6 +4,7 @@ using KazusaHSR.Protocol;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -20,5 +21,6 @@ internal class HandleGetCurSceneInfoCsReq
 			Scene = session.player.Scene.ToSceneInfoProto(),
 		};
 		session.SendPacket(rsp);
+		session.player.Scene.PostEnterScene();
 	}
 }

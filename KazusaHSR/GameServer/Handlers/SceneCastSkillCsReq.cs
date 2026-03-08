@@ -25,7 +25,6 @@ internal class HandleSceneCastSkillCsReq
 			return;
 		}
 
-		// todo: handle AbilityTargetEntityId
 		if (!session.player.Scene.EntityManager.TryGet(req.CastEntityId, out BaseEntity? iEntity))
 		{
 			session.c.LogWarning($"Player {session.player.Uid} tried to cast skill with non-existing entity {req.CastEntityId}");
@@ -34,7 +33,12 @@ internal class HandleSceneCastSkillCsReq
 			return;
 		}
 
-		if (iEntity is MonsterEntity monsterEntity)
+		if (iEntity is MonsterEntity monsterEntity &&
+			req.HitTargetEntityIdLists != null &&
+			req.HitTargetEntityIdLists.Length > 0 &&
+			req.HitTargetEntityIdLists.Any(i =>
+				session.player.Scene.EntityManager.TryGet(i, out BaseEntity? hitEntity) &&
+				hitEntity is AvatarEntity))
 		{
 			session.player.battleManager.StartMonsterBattle(
 				monsterEntity._EntityId,
@@ -45,9 +49,6 @@ internal class HandleSceneCastSkillCsReq
 		else if (iEntity is AvatarEntity avatarEntity)
 		{
 			var entities = session.player.Scene.EntityManager.Entities;
-
-			// todo: target the AbilityTargetEntityId in ability manager
-			// for now just pass all hit target entities
 			session.AbilityManager.OnAvatarMazeSkill(avatarEntity.DbInfo, req, rsp);
 		}
 
