@@ -50,10 +50,12 @@ public class ResourceLoader
 		this._resourceManager.StageExcel = LoadExcel<StageRow>("StageConfig");
 		this._resourceManager.PlaneEventExcel = LoadExcel<PlaneEventRow>("PlaneEvent");
 		this._resourceManager.NpcExcel = LoadExcel<NpcRow>("NpcData");
-		this._resourceManager.MapEntranceExcel = LoadExcel<MapEntranceRow>("MapEntrance");
+		this._resourceManager.MapEntranceExcel = LoadExcel<MapEntryRow>("MapEntrance");
 		this._resourceManager.CocoonExcel = LoadExcel<CocoonRow>("CocoonConfig");
 		this._resourceManager.MazeSkillExcel = LoadExcel<MazeSkillRow>("MazeSkill");
 		this._resourceManager.AdventurePlayerExcel = LoadExcel<AdventurePlayerRow>("AdventurePlayer");
+		this._resourceManager.ChallengeMazeExcel = LoadExcel<ChallengeMazeConfigRow>("ChallengeMazeConfig");
+		this._resourceManager.ChallengeTargetConfig = LoadExcel<ChallengeTargetConfigRow>("ChallengeTargetConfig");
 		this._resourceManager.ShopConfig = LoadExcel<ShopConfigRow>("ShopConfig");
 		this._resourceManager.ShopGoodsConfig = LoadExcel<ShopGoodsConfigRow>("ShopGoodsConfig");
 		this._resourceManager.ShopGoodsGroupConfig = LoadExcel<ShopGoodsGroupConfigRow>("ShopGoodsGroupConfig");
@@ -177,8 +179,9 @@ public class ResourceLoader
 
 public class TaskConfigJsonConverter : JsonConverter
 {
-	public override bool CanConvert(Type objectType)
-		=> objectType == typeof(TaskConfig);
+	public override bool CanConvert(Type objectType) =>
+		objectType == typeof(TaskConfig) ||
+		objectType == typeof(PredicateConfig);
 
 	public override object? ReadJson(
 		JsonReader reader,
@@ -198,7 +201,7 @@ public class TaskConfigJsonConverter : JsonConverter
 			.FirstOrDefault(t =>
 				typeof(TaskConfig).IsAssignableFrom(t) &&
 				!t.IsAbstract &&
-				t.Name == typeName.Split("RPG.GameCore.").Last());
+				t.Name == typeName.Split(".").Last());
 
 		if (concreteType == null)
 			return null;

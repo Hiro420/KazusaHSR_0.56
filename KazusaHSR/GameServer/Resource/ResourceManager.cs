@@ -33,10 +33,12 @@ public class ResourceManager
 	public List<ShopGoodsGroupConfigRow> ShopGoodsGroupConfig { get; set; } = new();
 	public List<PlaneEventRow> PlaneEventExcel { get; set; } = new();
 	public List<NpcRow> NpcExcel { get; set; } = new();
-	public List<MapEntranceRow> MapEntranceExcel { get; set; } = new();
+	public List<MapEntryRow> MapEntranceExcel { get; set; } = new();
 	public List<CocoonRow> CocoonExcel { get; set; } = new();
 	public List<MazeSkillRow> MazeSkillExcel { get; set; } = new();
 	public List<AdventurePlayerRow> AdventurePlayerExcel { get; set; } = new();
+	public List<ChallengeMazeConfigRow> ChallengeMazeExcel { get; set; } = new();
+	public List<ChallengeTargetConfigRow> ChallengeTargetConfig { get; set; } = new();
 
 	public Dictionary<uint, Dictionary<uint, LevelFloorInfo>> LevelFloorInfos { get; set; } = new();
 	public Dictionary<uint, Dictionary<uint, Dictionary<uint, LevelGroupInfo>>> LevelGroups { get; set; } = new();

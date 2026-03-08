@@ -10,7 +10,7 @@ internal class HandleGetMazeMapInfoCsReq
 	public static void OnPacket(Session session, Packet packet)
 	{
 		GetMazeMapInfoCsReq req = packet.GetDecodedBody<GetMazeMapInfoCsReq>();
-		MapEntranceRow? row = MainApp.resourceManager.MapEntranceExcel.FirstOrDefault(m => m.Id == req.EntryId);
+		MapEntryRow? row = MainApp.resourceManager.MapEntranceExcel.FirstOrDefault(m => m.ID == req.EntryId);
 		if (row == null)
 		{
 			session.c.LogWarning($"Player {session.player!.Uid} requested maze map info for invalid EntryId {req.EntryId}");
@@ -22,8 +22,8 @@ internal class HandleGetMazeMapInfoCsReq
 			return;
 		}
 
-		uint floorId = row.FloorId;
-		uint planeId = row.PlaneId;
+		uint floorId = row.FloorID;
+		uint planeId = row.PlaneID;
 
 		Dictionary<uint, LevelGroupInfo> levelGroups = Scene.GetDefaultLevelGroups(planeId, floorId);
 

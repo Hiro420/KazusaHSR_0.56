@@ -39,6 +39,7 @@ public class Player
 	public TeamManager TeamManager { get; }
 	public ItemManager ItemManager { get; }
 	public ShopManager ShopManager { get; set; }
+	public ChallengeManager ChallengeManager { get; }
 
 	public Player(Session session, uint uid)
 	{
@@ -54,6 +55,7 @@ public class Player
 		TeamManager = new TeamManager(this);
 		ItemManager = new ItemManager(this);
 		ShopManager = new ShopManager(this);
+		ChallengeManager = new ChallengeManager(this);
 		LastItemGuid = 0; // Initialize LastItemGuid
 	}
 
@@ -77,6 +79,12 @@ public class Player
 		{
 			logger.LogError($"Failed to persist player {Uid}: {ex.Message}");
 		}
+	}
+
+	public void SetPosAndRot(Protocol.Vector pos, Protocol.Vector rot)
+	{
+		this.Pos = pos;
+		this.Rot = rot;
 	}
 
 	public void AddBasicAvatar()
@@ -248,9 +256,9 @@ public class Player
 		return basicInfo;
 	}
 
-	public void EnterMaze(MapEntranceRow entrance, uint groupId, uint configId, out Maze? maze)
+	public void EnterMaze(MapEntryRow entrance, uint groupId, uint configId, out Maze? maze)
 	{
-		this.Scene = new Scene(session, entrance.PlaneId, entrance.FloorId, entrance.Id);
+		this.Scene = new Scene(session, entrance.PlaneID, entrance.FloorID, entrance.ID);
 		PropEntity? entranceProp = this.Scene.EntityManager.Entities.Values
 			.OfType<PropEntity>()
 			.FirstOrDefault(prop => prop.DbInfo.ID == configId);
@@ -286,6 +294,36 @@ public class Player
 			}
 		}
 		maze = this.Scene.ToMazeProto();
+		this.Scene.PostEnterScene();
+	}
+
+	public void EnterMaze(MapEntryRow entrance, uint groupId, out Maze? maze)
+	{
+		uint defaultAnchor = GetDefaultAnchorForEntry(entrance);
+		uint defaultGroup = GetDefaultGroupForEntry(entrance);
+		this.Scene = new Scene(session, entrance.PlaneID, entrance.FloorID, entrance.ID);
+		LevelAnchorInfo? anchor = this.Scene.LevelGroups[defaultGroup].AnchorList.FirstOrDefault(i => i.ID == defaultAnchor);
+		if (anchor != null)
+		{
+			this.Pos = new Protocol.Vector()
+			{
+				X = (int)(anchor.PosX * 1000),
+				Y = (int)(anchor.PosY * 1000),
+				Z = (int)(anchor.PosZ * 1000),
+			};
+			this.Rot = new Protocol.Vector()
+			{
+				X = 0,
+				Y = (int)(anchor.RotY * 1000),
+				Z = 0,
+			};
+		}
+		else
+		{
+			logger.LogWarning($"Anchor with ID {defaultAnchor} not found in group {groupId} for entrance ID {entrance.ID}.");
+		}
+		maze = this.Scene.ToMazeProto();
+		this.Scene.PostEnterScene();
 	}
 
 	public void EquipLightcone(PlayerAvatar avatar, ItemLightcone lightcone)
@@ -306,5 +344,17 @@ public class Player
 		avatar.EquipGuid = 0;
 		lightcone.BelongAvatarId = 0;
 		this.SavePersistent();
+	}
+
+	public uint GetDefaultGroupForEntry(MapEntryRow entry)
+	{
+		LevelFloorInfo levelFloorInfo = MainApp.resourceManager.LevelFloorInfos[entry.PlaneID][entry.FloorID];
+		return levelFloorInfo.StartGroupID;
+	}
+
+	public uint GetDefaultAnchorForEntry(MapEntryRow entry)
+	{
+		LevelFloorInfo levelFloorInfo = MainApp.resourceManager.LevelFloorInfos[entry.PlaneID][entry.FloorID];
+		return levelFloorInfo.StartAnchorID;
 	}
 }

@@ -16,7 +16,7 @@ internal class HandleEnterMazeCsReq
 		EnterMazeCsReq req = packet.GetDecodedBody<EnterMazeCsReq>();
 		EnterMazeScRsp rsp = new EnterMazeScRsp();
 		
-		MapEntranceRow? entrance = MainApp.resourceManager.MapEntranceExcel.FirstOrDefault(row => row.Id == req.EntryId);
+		MapEntryRow? entrance = MainApp.resourceManager.MapEntranceExcel.FirstOrDefault(row => row.ID == req.EntryId);
 
 		// little sanity check
 		if (entrance == null)

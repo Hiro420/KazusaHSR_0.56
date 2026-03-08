@@ -151,12 +151,15 @@ public class BattleManager
 		switch (req.EndStatus)
 		{
 			case BattleEndStatus.BattleEndWin:
+				if (session.player.ChallengeManager.IsInChallenge)
+					session.player.ChallengeManager.OnBattleResult(req.StageId, req.Stt);
 				// todo: calculate rewards and update player fight props
 				List<uint> allEntityIds = new List<uint>()
 					.Concat(MonsterEntityIds)
 					.Concat(AssistEntityIds)
 					.ToList();
 				session.player.Scene.EntityManager.DespawnMany(allEntityIds);
+					session.player.Scene.LevelGraphExecutor?.OnMonstersChanged();
 				break;
 			case BattleEndStatus.BattleEndQuit:
 			case BattleEndStatus.BattleEndLose:

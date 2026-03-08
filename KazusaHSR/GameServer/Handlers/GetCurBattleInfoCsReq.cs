@@ -13,7 +13,10 @@ internal class HandleGetCurBattleInfoCsReq
 	public static void OnPacket(Session session, Packet packet)
 	{
 		GetCurBattleInfoCsReq req = packet.GetDecodedBody<GetCurBattleInfoCsReq>();
-		GetCurBattleInfoScRsp rsp = new GetCurBattleInfoScRsp();
+		GetCurBattleInfoScRsp rsp = new GetCurBattleInfoScRsp()
+		{
+			Retcode = (uint)Retcode.RetFail
+		};
 		// todo: implement battle info retrieval
 		session.SendPacket(rsp);
 	}

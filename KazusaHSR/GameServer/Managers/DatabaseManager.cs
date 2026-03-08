@@ -173,6 +173,8 @@ public class AccountDocument
     public List<PlayerAvatarData> Avatars { get; set; } = new();
     public List<PlayerItemData> Items { get; set; } = new();
     public List<PlayerTeamData> Teams { get; set; } = new();
+    public List<PlayerChallenge> Challenges { get; set; } = new();
+    public PlayerChallengeVirtualLineup? ChallengeVirtualLineup { get; set; }
 
     public static AccountDocument FromPlayer(string accountId, string token, Player player)
     {
@@ -200,6 +202,17 @@ public class AccountDocument
             Avatars = player.avatarDict.Values.Select(PlayerAvatarData.FromAvatar).ToList(),
             Items = player.ItemManager.Items.Select(PlayerItemData.FromItem).ToList(),
             Teams = player.TeamManager.Teams.Select(PlayerTeamData.FromTeam).ToList(),
+            Challenges = player.ChallengeManager.Challenges
+                .Select(c => new PlayerChallenge { ChallengeId = c.ChallengeId, Stars = c.Stars })
+                .ToList(),
+            ChallengeVirtualLineup = new PlayerChallengeVirtualLineup
+            {
+                PlaneId = player.ChallengeManager.VirtualLineup.PlaneId,
+                CurMp = player.ChallengeManager.VirtualLineup.CurMp,
+                MaxMp = player.ChallengeManager.VirtualLineup.MaxMp,
+                LeaderAvatarId = player.ChallengeManager.VirtualLineup.LeaderAvatarId,
+                AvatarIds = new List<uint>(player.ChallengeManager.VirtualLineup.AvatarIds ?? new List<uint>(new uint[4])),
+            },
         };
 
         return doc;
@@ -259,6 +272,7 @@ public class AccountDocument
         }
 
         player.TeamManager.EnsureAtLeastOneTeam();
+        player.ChallengeManager.LoadFromPersistence(Challenges ?? new List<PlayerChallenge>(), ChallengeVirtualLineup);
 
         if (TeamIndex >= player.TeamManager.TeamCount)
         {

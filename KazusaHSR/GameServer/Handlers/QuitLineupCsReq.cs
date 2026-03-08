@@ -21,6 +21,17 @@ internal class HandleQuitLineupCsReq
 			AvatarId = req.AvatarId,
 			IsVirtual = req.IsVirtual,
 		};
+		if (req.ExtraLineupType == ExtraLineupType.LineupChallenge)
+		{
+			var ret = session.player.ChallengeManager.RemoveVirtualAvatar(req.AvatarId);
+			if (ret != Retcode.RetSucc)
+			{
+				rsp.Retcode = (uint)ret;
+			}
+			session.SendPacket(rsp);
+			session.player.ChallengeManager.SendSyncLineupNotify();
+			return;
+		}
 		if (req.Index >= session.player.TeamManager.TeamCount)
 		{
 			rsp.Retcode = (uint)Retcode.RetLineupInvalidIndex;

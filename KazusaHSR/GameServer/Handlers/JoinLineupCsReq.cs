@@ -15,6 +15,22 @@ internal class HandleJoinLineupCsReq
 	{
 		JoinLineupCsReq req = packet.GetDecodedBody<JoinLineupCsReq>();
 		JoinLineupScRsp rsp = new JoinLineupScRsp();
+		if (req.ExtraLineupType == ExtraLineupType.LineupChallenge)
+		{
+			PlayerAvatar? virtualAvatar = session.player.avatarDict.Values
+				.FirstOrDefault(a => a.AvatarId == req.AvatarId);
+			if (virtualAvatar == null)
+			{
+				rsp.Retcode = (uint)Retcode.RetLineupAvatarNotExist;
+				session.SendPacket(rsp);
+				return;
+			}
+			var ret = session.player.ChallengeManager.SetVirtualAvatarInSlot((int)req.Slot, virtualAvatar);
+			rsp.Retcode = (uint)ret;
+			session.SendPacket(rsp);
+			session.player.ChallengeManager.SendSyncLineupNotify();
+			return;
+		}
 		int teamIndex = (int)req.Index;
 		PlayerAvatar? avatar = session.player.avatarDict.Values
 			.FirstOrDefault(a => a.AvatarId == req.AvatarId);

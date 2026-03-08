@@ -15,7 +15,8 @@ internal class HandleGetAvatarDataCsReq
 	{
 		GetAvatarDataCsReq req = packet.GetDecodedBody<GetAvatarDataCsReq>();
 		GetAvatarDataScRsp rsp = new GetAvatarDataScRsp();
-		foreach (PlayerAvatar avatar in session.player.avatarDict.Values)
+		IEnumerable<PlayerAvatar> allAvatars = session.player.avatarDict.Values;
+		foreach (PlayerAvatar avatar in req.IsGetAll ? allAvatars : allAvatars.Where(i => req.AvatarIdLists.Contains(i.AvatarId)))
 		{
 			rsp.AvatarLists.Add(avatar.ToAvatarProto());
 		}

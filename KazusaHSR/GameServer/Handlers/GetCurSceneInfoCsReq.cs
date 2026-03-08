@@ -1,4 +1,5 @@
 ﻿using KazusaHSR.GameServer.PlayerInfos;
+using KazusaHSR.GameServer.Resource;
 using KazusaHSR.Protocol;
 using System;
 using System.Collections.Generic;

@@ -16,9 +16,18 @@ internal class HandleGetChallengeCsReq
 		GetChallengeCsReq req = packet.GetDecodedBody<GetChallengeCsReq>();
 		GetChallengeScRsp rsp = new GetChallengeScRsp()
 		{
-			// todo
-			ChallengeLists = { }
+			Retcode = (uint)Retcode.RetSucc,
 		};
+		foreach (var row in MainApp.resourceManager.ChallengeMazeExcel)
+		{
+			uint stars = session.player.ChallengeManager.GetStars(row.ID);
+			Challenge challenge = new Challenge
+			{
+				ChallengeId = row.ID,
+				Stars = stars,
+			};
+			rsp.ChallengeLists.Add(challenge);
+		}
 		session.SendPacket(rsp);
 	}
 }

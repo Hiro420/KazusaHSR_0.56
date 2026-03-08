@@ -20,6 +20,7 @@ public class Scene
 	public Session session { get; private set; }
 	public EntityManager EntityManager { get; }
 	public bool isFinishInit { get; set; } = false;
+	public SceneLevelGraphExecutor LevelGraphExecutor { get; }
 
 	private uint _nextEntityIndex = 0;
 	private readonly object _entityIdLock = new();
@@ -32,6 +33,7 @@ public class Scene
 	{
 		this.session = session;
 		this.EntityManager = new EntityManager(session);
+		this.LevelGraphExecutor = new SceneLevelGraphExecutor(this);
 		this.PlaneId = planeId;
 		this.FloorId = FloorId;
 
@@ -40,11 +42,11 @@ public class Scene
 		else
 		{
 			LevelFloorInfo levelFloor = this.levelFloorInfo;
-			MapEntranceRow? entrance = MainApp.resourceManager.MapEntranceExcel
-				.FirstOrDefault(e => e.PlaneId == planeId && e.FloorId == FloorId);
+			MapEntryRow? entrance = MainApp.resourceManager.MapEntranceExcel
+				.FirstOrDefault(e => e.PlaneID == planeId && e.FloorID == FloorId);
 			if (entrance != null)
 			{
-				this.EntranceId = entrance.Id;
+				this.EntranceId = entrance.ID;
 			}
 			else
 			{
@@ -90,6 +92,21 @@ public class Scene
 		//	defaultGroups[info.ID] = groupInfo;
 		//}
 		return defaultGroups;
+	}
+
+	public void PostEnterScene()
+	{
+		// Start level-graph executors for all groups that have a LevelGraph
+		foreach (var kvp in LevelGroups)
+		{
+			uint groupId = kvp.Key;
+			LevelGroupInfo group = kvp.Value;
+			if (group == null || string.IsNullOrEmpty(group.LevelGraph))
+				continue;
+
+			session.c.LogInfo($"[Scene] PostEnterScene: starting level graph {group.LevelGraph} for group {group.GroupGUID} (GroupId={groupId})");
+			LevelGraphExecutor.StartForGroup(groupId, group);
+		}
 	}
 
 	public SceneInfo ToSceneInfoProto()
