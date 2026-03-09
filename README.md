@@ -16,6 +16,8 @@ Main purpose of this project is preservation of the oldest game version we curre
 - All playable characters fully working
 - Working fights
 - Properly implemented Ability management
+- Working open-world logic
+- Working challenges
 
 ### Personal TODO List
 - SP management
