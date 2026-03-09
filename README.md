@@ -20,7 +20,6 @@ Main purpose of this project is preservation of the oldest game version we curre
 ### Personal TODO List
 - SP management
 - Commands
-- Fix challenge lineups
 - Prop task configs
 
 Copyright© Hiro420
