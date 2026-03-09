@@ -1,18 +1,13 @@
 ﻿using KazusaHSR.Protocol;
-using System;
-using KazusaHSR.Utils;
-using System.Numerics;
-using System.Reflection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using ProtoBuf;
 using Serilog;
-using Newtonsoft.Json;
-using System.Linq;
-using Newtonsoft.Json.Converters;
-using System.IO;
-using System.Buffers.Binary;
 using System.Net;
 using System.Net.Sockets;
+using System.Numerics;
+using System.Reflection;
 
 namespace KazusaHSR.GameServer;
 
@@ -28,7 +23,7 @@ public class Session
 	private ILogger<Session> fileLogger;
 	private static readonly string logsFolder = "Logs";
 	private static readonly List<string> blacklist = new List<string>()
-	{  	// to not flood the console
+	{   // to not flood the console
 		// TODO
 	};
 	private JsonSerializer _JsonConverter;

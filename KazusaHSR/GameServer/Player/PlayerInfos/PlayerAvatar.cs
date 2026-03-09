@@ -1,13 +1,6 @@
-﻿using KazusaHSR;
-using KazusaHSR.GameServer;
-using KazusaHSR.GameServer.Resource.Excel;
+﻿using KazusaHSR.GameServer.Resource.Excel;
 using KazusaHSR.Protocol;
 using KazusaHSR.Resource;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KazusaHSR.GameServer.PlayerInfos;
 
@@ -68,8 +61,8 @@ public class PlayerAvatar
 		{
 			if (item.Value == 0)
 				continue; // skill tree point not unlocked, skip
-			AvatarSkillTreeRow? treeRow = resourceManager.AvatarSkillTreeExcel.Where(s => 
-				s.PointID == item.Key && 
+			AvatarSkillTreeRow? treeRow = resourceManager.AvatarSkillTreeExcel.Where(s =>
+				s.PointID == item.Key &&
 				s.Level == item.Value
 			).FirstOrDefault();
 			if (treeRow != null)

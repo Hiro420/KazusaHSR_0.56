@@ -1,5 +1,4 @@
-﻿using KazusaHSR.GameServer;
-using KazusaHSR.Protocol;
+﻿using KazusaHSR.Protocol;
 using KazusaHSR.Utils;
 using KazusaHSR.WebServer.Handlers;
 using Newtonsoft.Json;
@@ -11,7 +10,7 @@ namespace KazusaHSR.WebServer;
 
 public class HttpHandler
 {
-    Config config = MainApp.config;
+	Config config = MainApp.config;
 
 	[HttpEndpoint("/account/risky/api/check", "POST")]
 	public HttpResponse AccountRiskyCheck(HttpListenerRequest request)

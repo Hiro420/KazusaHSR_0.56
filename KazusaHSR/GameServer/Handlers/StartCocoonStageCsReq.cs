@@ -1,10 +1,5 @@
 ﻿using KazusaHSR.GameServer.Resource.Excel;
 using KazusaHSR.Protocol;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KazusaHSR.GameServer.Handlers.Recv;
 
@@ -36,7 +31,7 @@ internal class HandleStartCocoonStageCsReq
 			return;
 		}
 		CocoonRow? matchingRow = cocoonRows.FirstOrDefault(c => c.WorldLevel == session.player.WorldLevel);
-		if (matchingRow == null )
+		if (matchingRow == null)
 		{
 			session.c.LogWarning($"Player {session.player.Uid} tried to start cocoon stage with no matching world level ({session.player.WorldLevel}) for cocoon ID {req.CocoonId}");
 			StartCocoonStageScRsp errorRsp = new StartCocoonStageScRsp()

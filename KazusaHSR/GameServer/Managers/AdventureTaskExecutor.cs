@@ -1,8 +1,6 @@
-using Amazon.Runtime.Internal;
 using KazusaHSR.GameServer.PlayerInfos;
 using KazusaHSR.GameServer.Resource;
 using KazusaHSR.Protocol;
-using System.Linq;
 
 namespace KazusaHSR.GameServer;
 
@@ -173,7 +171,7 @@ public sealed class AdventureTaskExecutor
 		bool isHit = _ctx.Request.HitTargetEntityIdLists != null &&
 			_ctx.Request.HitTargetEntityIdLists.Length > 0;
 		if (isHit)
-			{
+		{
 			_ctx.Session.c.LogInfo("[AdventureTaskExecutor] Projectile hit detected, executing OnProjectileHit tasks");
 			if (config.OnProjectileHit != null)
 				ExecuteTasks(config.OnProjectileHit);

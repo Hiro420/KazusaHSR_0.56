@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using KazusaHSR.GameServer.PlayerInfos;
 using KazusaHSR.Protocol;
 
@@ -8,130 +5,130 @@ namespace KazusaHSR.GameServer;
 
 public class TeamManager
 {
-    private readonly Player _player;
+	private readonly Player _player;
 
-    public TeamManager(Player player)
-    {
-        _player = player ?? throw new ArgumentNullException(nameof(player));
-    }
+	public TeamManager(Player player)
+	{
+		_player = player ?? throw new ArgumentNullException(nameof(player));
+	}
 
-    public IReadOnlyList<PlayerTeam> Teams => _player.teamList;
+	public IReadOnlyList<PlayerTeam> Teams => _player.teamList;
 
-    public int TeamCount => _player.teamList.Count;
+	public int TeamCount => _player.teamList.Count;
 
-    public void Clear()
-    {
-        _player.teamList.Clear();
-    }
+	public void Clear()
+	{
+		_player.teamList.Clear();
+	}
 
-    public void AddTeam(PlayerTeam team)
-    {
-        if (team == null) throw new ArgumentNullException(nameof(team));
-        _player.teamList.Add(team);
-    }
+	public void AddTeam(PlayerTeam team)
+	{
+		if (team == null) throw new ArgumentNullException(nameof(team));
+		_player.teamList.Add(team);
+	}
 
-    public void EnsureAtLeastOneTeam()
-    {
-        if (_player.teamList.Count == 0)
-        {
-            _player.teamList.Add(new PlayerTeam(_player.Session));
-        }
-    }
+	public void EnsureAtLeastOneTeam()
+	{
+		if (_player.teamList.Count == 0)
+		{
+			_player.teamList.Add(new PlayerTeam(_player.Session));
+		}
+	}
 
-    public int GetIndex(PlayerTeam team)
-    {
-        if (team == null) throw new ArgumentNullException(nameof(team));
-        return _player.teamList.IndexOf(team);
-    }
+	public int GetIndex(PlayerTeam team)
+	{
+		if (team == null) throw new ArgumentNullException(nameof(team));
+		return _player.teamList.IndexOf(team);
+	}
 
-    public PlayerTeam GetTeamByIndex(int index)
-    {
-        if (index < 0 || index >= _player.teamList.Count)
-            throw new ArgumentOutOfRangeException(nameof(index));
+	public PlayerTeam GetTeamByIndex(int index)
+	{
+		if (index < 0 || index >= _player.teamList.Count)
+			throw new ArgumentOutOfRangeException(nameof(index));
 
-        return _player.teamList[index];
-    }
+		return _player.teamList[index];
+	}
 
-    public Retcode ChangeLeader(int teamIndex, int slotIndex)
-    {
-        if (teamIndex < 0 || teamIndex >= _player.teamList.Count)
-            return Retcode.RetLineupInvalidIndex;
+	public Retcode ChangeLeader(int teamIndex, int slotIndex)
+	{
+		if (teamIndex < 0 || teamIndex >= _player.teamList.Count)
+			return Retcode.RetLineupInvalidIndex;
 
-        var team = _player.teamList[teamIndex];
-        if (slotIndex < 0 || slotIndex >= team.Avatars.Count)
-            return Retcode.RetLineupAvatarNotExist;
+		var team = _player.teamList[teamIndex];
+		if (slotIndex < 0 || slotIndex >= team.Avatars.Count)
+			return Retcode.RetLineupAvatarNotExist;
 
-        var avatar = team.Avatars[slotIndex];
-        team.SetLeader(_player.Session, avatar);
-        _player.SavePersistent();
-        return Retcode.RetSucc;
-    }
+		var avatar = team.Avatars[slotIndex];
+		team.SetLeader(_player.Session, avatar);
+		_player.SavePersistent();
+		return Retcode.RetSucc;
+	}
 
-    public Retcode SetAvatarInSlot(int teamIndex, int slotIndex, PlayerAvatar avatar)
-    {
-        if (avatar == null)
-            throw new ArgumentNullException(nameof(avatar));
+	public Retcode SetAvatarInSlot(int teamIndex, int slotIndex, PlayerAvatar avatar)
+	{
+		if (avatar == null)
+			throw new ArgumentNullException(nameof(avatar));
 
-        if (teamIndex < 0 || teamIndex >= _player.teamList.Count)
-            return Retcode.RetLineupInvalidIndex;
+		if (teamIndex < 0 || teamIndex >= _player.teamList.Count)
+			return Retcode.RetLineupInvalidIndex;
 
-        var team = _player.teamList[teamIndex];
-        var ret = team.SqueezeAvatarIn(_player.Session, avatar, slotIndex);
-        if (ret == Retcode.RetSucc)
-            _player.SavePersistent();
+		var team = _player.teamList[teamIndex];
+		var ret = team.SqueezeAvatarIn(_player.Session, avatar, slotIndex);
+		if (ret == Retcode.RetSucc)
+			_player.SavePersistent();
 
-        return ret;
-    }
+		return ret;
+	}
 
-    public Retcode RemoveAvatar(int teamIndex, int slotIndex)
-    {
-        if (teamIndex < 0 || teamIndex >= _player.teamList.Count)
-            return Retcode.RetLineupInvalidIndex;
+	public Retcode RemoveAvatar(int teamIndex, int slotIndex)
+	{
+		if (teamIndex < 0 || teamIndex >= _player.teamList.Count)
+			return Retcode.RetLineupInvalidIndex;
 
-        var team = _player.teamList[teamIndex];
-        if (slotIndex < 0 || slotIndex >= team.Avatars.Count)
-            return Retcode.RetLineupAvatarNotExist;
+		var team = _player.teamList[teamIndex];
+		if (slotIndex < 0 || slotIndex >= team.Avatars.Count)
+			return Retcode.RetLineupAvatarNotExist;
 
-        var avatar = team.Avatars[slotIndex];
-        if (team.Avatars.Count == 1)
-            return Retcode.RetLineupAvatarNotExist;
+		var avatar = team.Avatars[slotIndex];
+		if (team.Avatars.Count == 1)
+			return Retcode.RetLineupAvatarNotExist;
 
-        team.RemoveAvatar(_player.Session, avatar);
-        _player.SavePersistent();
-        return Retcode.RetSucc;
-    }
+		team.RemoveAvatar(_player.Session, avatar);
+		_player.SavePersistent();
+		return Retcode.RetSucc;
+	}
 
-    public Retcode SetActiveTeam(uint teamIndex)
-    {
-        if (teamIndex < 0 || teamIndex >= _player.teamList.Count)
-            return Retcode.RetLineupInvalidIndex;
+	public Retcode SetActiveTeam(uint teamIndex)
+	{
+		if (teamIndex < 0 || teamIndex >= _player.teamList.Count)
+			return Retcode.RetLineupInvalidIndex;
 
-        _player.TeamIndex = teamIndex;
-        _player.SavePersistent();
-        return Retcode.RetSucc;
-    }
+		_player.TeamIndex = teamIndex;
+		_player.SavePersistent();
+		return Retcode.RetSucc;
+	}
 
-    public Retcode SwapAvatars(int teamIndex, int srcSlot, int dstSlot)
-    {
-        if (teamIndex < 0 || teamIndex >= _player.teamList.Count)
-            return Retcode.RetLineupInvalidIndex;
+	public Retcode SwapAvatars(int teamIndex, int srcSlot, int dstSlot)
+	{
+		if (teamIndex < 0 || teamIndex >= _player.teamList.Count)
+			return Retcode.RetLineupInvalidIndex;
 
-        var team = _player.teamList[teamIndex];
-        if (srcSlot < 0 || srcSlot >= team.Avatars.Count || dstSlot < 0 || dstSlot >= team.Avatars.Count)
-            return Retcode.RetLineupInvalidIndex;
+		var team = _player.teamList[teamIndex];
+		if (srcSlot < 0 || srcSlot >= team.Avatars.Count || dstSlot < 0 || dstSlot >= team.Avatars.Count)
+			return Retcode.RetLineupInvalidIndex;
 
-        if (srcSlot == dstSlot)
-            return Retcode.RetSucc;
+		if (srcSlot == dstSlot)
+			return Retcode.RetSucc;
 
-        var srcAvatar = team.Avatars[srcSlot];
-        var dstAvatar = team.Avatars[dstSlot];
-        if (srcAvatar == null)
-            return Retcode.RetLineupAvatarNotExist;
+		var srcAvatar = team.Avatars[srcSlot];
+		var dstAvatar = team.Avatars[dstSlot];
+		if (srcAvatar == null)
+			return Retcode.RetLineupAvatarNotExist;
 
-        team.Avatars[srcSlot] = dstAvatar;
-        team.Avatars[dstSlot] = srcAvatar;
+		team.Avatars[srcSlot] = dstAvatar;
+		team.Avatars[dstSlot] = srcAvatar;
 
-        _player.SavePersistent();
-        return Retcode.RetSucc;
-    }
+		_player.SavePersistent();
+		return Retcode.RetSucc;
+	}
 }

@@ -1,63 +1,60 @@
 ﻿using KazusaHSR.Protocol;
-using System.Buffers.Binary;
-using System.Net;
 using ProtoBuf;
-using System.Reflection;
+using System.Buffers.Binary;
 //using static KazusaHSR.Utils.Crypto;
 using System.Runtime.InteropServices;
-using System.IO;
 
 namespace KazusaHSR.GameServer;
 
 public class Packet
 {
-    public uint CmdId { get; set; }
-    public byte[] FinishedBody { get; set; }
-    public IExtensible Ori { get; set; } // protobuf-net compatible
-    private const uint HeaderMagic = 0x01234567;
-    private const uint FooterMagic = 0x89ABCDEF;
+	public uint CmdId { get; set; }
+	public byte[] FinishedBody { get; set; }
+	public IExtensible Ori { get; set; } // protobuf-net compatible
+	private const uint HeaderMagic = 0x01234567;
+	private const uint FooterMagic = 0x89ABCDEF;
 
 
 	public void SetData<T>(PacketId cmdType, T msg) where T : class, IExtensible
-    {
-        CmdId = (uint)cmdType;
-        FinishedBody = SerializeToByteArray(msg);
-        Ori = msg;
-    }
+	{
+		CmdId = (uint)cmdType;
+		FinishedBody = SerializeToByteArray(msg);
+		Ori = msg;
+	}
 
-    public static byte[] SerializeToByteArray<T>(T obj) where T : class, IExtensible
-    {
-        using (var ms = new MemoryStream())
-        {
-            Serializer.Serialize(ms, obj);
-            return ms.ToArray();
-        }
-    }
+	public static byte[] SerializeToByteArray<T>(T obj) where T : class, IExtensible
+	{
+		using (var ms = new MemoryStream())
+		{
+			Serializer.Serialize(ms, obj);
+			return ms.ToArray();
+		}
+	}
 
-    public static T DeserializeFromByteArray<T>(byte[] data) where T : class, IExtensible
-    {
-        using (var ms = new MemoryStream(data))
-        {
-            return Serializer.Deserialize<T>(ms);
-        }
-    }
+	public static T DeserializeFromByteArray<T>(byte[] data) where T : class, IExtensible
+	{
+		using (var ms = new MemoryStream(data))
+		{
+			return Serializer.Deserialize<T>(ms);
+		}
+	}
 
-    public T DecodeBody<T>() where T : class, IExtensible, new()
-    {
-        return DeserializeFromByteArray<T>(FinishedBody);
-    }
+	public T DecodeBody<T>() where T : class, IExtensible, new()
+	{
+		return DeserializeFromByteArray<T>(FinishedBody);
+	}
 
-    public T GetDecodedBody<T>()
-    {
-        T serializedBody;
+	public T GetDecodedBody<T>()
+	{
+		T serializedBody;
 
-        using (MemoryStream stream = new(FinishedBody))
-        {
-            serializedBody = Serializer.Deserialize<T>(stream);
-        }
+		using (MemoryStream stream = new(FinishedBody))
+		{
+			serializedBody = Serializer.Deserialize<T>(stream);
+		}
 
-        return serializedBody;
-    }
+		return serializedBody;
+	}
 
 	public static ushort GetUInt16(byte[] buf, int index)
 	{
@@ -80,21 +77,21 @@ public class Packet
 	}
 
 	public static void PutByteArray(byte[] destination, byte[] source, int offset)
-    {
-        Buffer.BlockCopy(source, 0, destination, offset, source.Length);
-    }
+	{
+		Buffer.BlockCopy(source, 0, destination, offset, source.Length);
+	}
 
-    public static byte[] ToByteArray(IntPtr ptr, int length)
-    {
-        if (ptr == IntPtr.Zero)
-        {
-            throw new ArgumentException("Pointer cannot be null", nameof(ptr));
-        }
+	public static byte[] ToByteArray(IntPtr ptr, int length)
+	{
+		if (ptr == IntPtr.Zero)
+		{
+			throw new ArgumentException("Pointer cannot be null", nameof(ptr));
+		}
 
-        byte[] byteArray = new byte[length];
-        Marshal.Copy(ptr, byteArray, 0, length);
-        return byteArray;
-    }
+		byte[] byteArray = new byte[length];
+		Marshal.Copy(ptr, byteArray, 0, length);
+		return byteArray;
+	}
 
 	public static byte[] EncodePacket(Session session, ushort CmdId, IExtensible body)
 	{
@@ -179,13 +176,13 @@ public class Packet
 	}
 
 	[AttributeUsage(AttributeTargets.Method)]
-    public class PacketCmdId : Attribute
-    {
-        public PacketId Id { get; }
+	public class PacketCmdId : Attribute
+	{
+		public PacketId Id { get; }
 
-        public PacketCmdId(PacketId id)
-        {
-            Id = id;
-        }
-    }
+		public PacketCmdId(PacketId id)
+		{
+			Id = id;
+		}
+	}
 }

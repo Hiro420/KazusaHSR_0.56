@@ -1,12 +1,5 @@
-﻿using KazusaHSR.GameServer.PlayerInfos;
-using KazusaHSR.GameServer.Resource;
+﻿using KazusaHSR.GameServer.Resource;
 using KazusaHSR.Protocol;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KazusaHSR.GameServer;
 
@@ -16,11 +9,12 @@ public class NpcEntity : BaseEntity
 	public uint GroupId { get; init; }
 
 	public NpcEntity(Session session, LevelNPCInfo _levelNpcInfo, uint groupId) : base(
-		session, 
-		Protocol.EntityType.EntityNpc, 
-		new Protocol.Vector() { 
-			X = (int)(_levelNpcInfo.PosX * 1000), 
-			Y = (int)(_levelNpcInfo.PosY * 1000), 
+		session,
+		Protocol.EntityType.EntityNpc,
+		new Protocol.Vector()
+		{
+			X = (int)(_levelNpcInfo.PosX * 1000),
+			Y = (int)(_levelNpcInfo.PosY * 1000),
 			Z = (int)(_levelNpcInfo.PosZ * 1000)
 		},
 		new Protocol.Vector()

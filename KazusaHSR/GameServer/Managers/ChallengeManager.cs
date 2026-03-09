@@ -343,7 +343,7 @@ public class ChallengeManager
 				_player.Session.c.LogWarning($"Unexpected challenge target with ID {trow.ID}. Expected ROUNDS, got {trow.ChallengeTargetType}");
 				continue;
 			}
-			this._challengeTargetConfigs.Add(trow, false); 
+			this._challengeTargetConfigs.Add(trow, false);
 		}
 	}
 

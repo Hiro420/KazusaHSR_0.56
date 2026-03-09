@@ -1,10 +1,4 @@
 ﻿using KazusaHSR.Protocol;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KazusaHSR.GameServer;
 
@@ -15,13 +9,15 @@ public abstract class BaseEntity
 	private Protocol.Vector _position;
 	public HashSet<uint> AttachedMazeBuffs { get; set; } = new HashSet<uint>();
 
-	public Protocol.Vector Position 
-	{ 
-		get {
+	public Protocol.Vector Position
+	{
+		get
+		{
 			return this is AvatarEntity avatarEntity ? avatarEntity.Session.player!.Pos : _position;
 		}
-		set { 
-			_position = value; 
+		set
+		{
+			_position = value;
 		}
 	}
 	public Protocol.Vector Rotation { get; set; }

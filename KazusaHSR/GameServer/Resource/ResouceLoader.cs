@@ -2,12 +2,7 @@
 using KazusaHSR.GameServer.Resource.Excel;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KazusaHSR.Resource;
 
@@ -85,8 +80,8 @@ public class ResourceLoader
 				{
 					uint groupId = group.ID;
 					LevelGroupInfo groupInfo = LoadConfig<LevelGroupInfo>(
-						$"LevelGroup_P{planeId}_F{floorId}_G{groupId}", 
-						"LevelOutput", 
+						$"LevelGroup_P{planeId}_F{floorId}_G{groupId}",
+						"LevelOutput",
 						"Group",
 						$"Groups_P{planeId}_F{floorId}"
 					);

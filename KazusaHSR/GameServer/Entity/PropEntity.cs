@@ -1,12 +1,5 @@
-﻿using KazusaHSR.GameServer.PlayerInfos;
-using KazusaHSR.GameServer.Resource;
+﻿using KazusaHSR.GameServer.Resource;
 using KazusaHSR.Protocol;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KazusaHSR.GameServer;
 
@@ -22,11 +15,12 @@ public class PropEntity : BaseEntity
 	public uint GroupId { get; init; }
 
 	public PropEntity(Session session, LevelPropInfo _levelPropInfo, uint groupId) : base(
-		session, 
-		Protocol.EntityType.EntityProp, 
-		new Protocol.Vector() { 
-			X = (int)(_levelPropInfo.PosX * 1000), 
-			Y = (int)(_levelPropInfo.PosY * 1000), 
+		session,
+		Protocol.EntityType.EntityProp,
+		new Protocol.Vector()
+		{
+			X = (int)(_levelPropInfo.PosX * 1000),
+			Y = (int)(_levelPropInfo.PosY * 1000),
 			Z = (int)(_levelPropInfo.PosZ * 1000)
 		},
 		new Protocol.Vector()

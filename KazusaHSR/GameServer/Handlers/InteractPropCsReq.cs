@@ -1,10 +1,5 @@
 ﻿using KazusaHSR.GameServer.Resource.Excel;
 using KazusaHSR.Protocol;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KazusaHSR.GameServer.Handlers.Recv;
 
@@ -14,7 +9,7 @@ internal class HandleInteractPropCsReq
 	public static void OnPacket(Session session, Packet packet)
 	{
 		InteractPropCsReq req = packet.GetDecodedBody<InteractPropCsReq>();
-		
+
 		if (!session.player!.Scene!.EntityManager.TryGet(req.PropEntityId, out BaseEntity propEntity))
 		{
 			session.c.LogWarning($"Player {session.player!.Uid} tried to interact with non-existing prop entity {req.PropEntityId}");

@@ -1,13 +1,6 @@
 ﻿//using KazusaHSR.Resource.Excel;
 using KazusaHSR.GameServer.Resource;
 using KazusaHSR.GameServer.Resource.Excel;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Resources;
-using System.Text;
 
 namespace KazusaHSR.Resource;
 

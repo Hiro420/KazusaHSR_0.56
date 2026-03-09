@@ -1,11 +1,5 @@
-﻿using KazusaHSR.Protocol;
-using KazusaHSR.Resource;
-using KazusaHSR;
-using KazusaHSR.GameServer;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using KazusaHSR.GameServer.Resource.Excel;
+﻿using KazusaHSR.GameServer.Resource.Excel;
+using KazusaHSR.Protocol;
 
 namespace KazusaHSR.GameServer.PlayerInfos;
 

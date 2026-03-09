@@ -1,10 +1,5 @@
 ﻿using KazusaHSR.GameServer.Resource.Excel;
 using KazusaHSR.Protocol;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KazusaHSR.GameServer.Handlers.Recv;
 
@@ -15,7 +10,7 @@ internal class HandleEnterMazeCsReq
 	{
 		EnterMazeCsReq req = packet.GetDecodedBody<EnterMazeCsReq>();
 		EnterMazeScRsp rsp = new EnterMazeScRsp();
-		
+
 		MapEntryRow? entrance = MainApp.resourceManager.MapEntranceExcel.FirstOrDefault(row => row.ID == req.EntryId);
 
 		// little sanity check
@@ -27,7 +22,7 @@ internal class HandleEnterMazeCsReq
 		}
 
 		session.player!.EnterMaze(entrance!, req.GroupId, req.ConfigId, out Maze? maze);
-		
+
 		if (maze == null)
 		{
 			rsp.Retcode = (uint)Retcode.RetServerInternalError;

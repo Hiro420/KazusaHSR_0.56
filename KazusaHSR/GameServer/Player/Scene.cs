@@ -1,14 +1,7 @@
-﻿using KazusaHSR.GameServer;
-using KazusaHSR.GameServer.PlayerInfos;
+﻿using KazusaHSR.GameServer.PlayerInfos;
 using KazusaHSR.GameServer.Resource;
 using KazusaHSR.GameServer.Resource.Excel;
 using KazusaHSR.Protocol;
-using KazusaHSR.Resource;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
 
 namespace KazusaHSR.GameServer;
 
@@ -234,9 +227,9 @@ public class Scene
 		AvatarEntity? avatarEntity = this.EntityManager.TryGetByPlayerAvatar(avatar);
 		if (avatarEntity != null)
 		{
-			session.SendPacket(new SceneEntityDisappearScNotify() 
-			{ 
-				EntityIdLists = [avatarEntity._EntityId] 
+			session.SendPacket(new SceneEntityDisappearScNotify()
+			{
+				EntityIdLists = [avatarEntity._EntityId]
 			});
 			this.EntityManager.Remove(avatarEntity._EntityId);
 		}

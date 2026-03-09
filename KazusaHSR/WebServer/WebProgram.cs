@@ -1,182 +1,180 @@
-﻿using System;
-using System.Net;
-using System.Text;
-using System.IO;
+﻿using Newtonsoft.Json;
 using System.IO.Compression;
+using System.Net;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
 
 namespace KazusaHSR.WebServer;
 
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public class HttpEndpointAttribute : Attribute
 {
-    public string PathPattern { get; }
-    public string Method { get; }
-    public readonly Regex _regexPattern;
+	public string PathPattern { get; }
+	public string Method { get; }
+	public readonly Regex _regexPattern;
 
-    public HttpEndpointAttribute(string pathPattern, string method = "GET")
-    {
-        PathPattern = pathPattern;
-        Method = method.ToUpper();
+	public HttpEndpointAttribute(string pathPattern, string method = "GET")
+	{
+		PathPattern = pathPattern;
+		Method = method.ToUpper();
 
-        // "/client_game_res/:param" -> "^/client_game_res/([^/]+)$"
-        string regexPattern = "^" + Regex.Replace(pathPattern, @":([^/]+)", "(?<$1>[^/]+)") + "$";
-        _regexPattern = new Regex(regexPattern, RegexOptions.Compiled);
-    }
+		// "/client_game_res/:param" -> "^/client_game_res/([^/]+)$"
+		string regexPattern = "^" + Regex.Replace(pathPattern, @":([^/]+)", "(?<$1>[^/]+)") + "$";
+		_regexPattern = new Regex(regexPattern, RegexOptions.Compiled);
+	}
 
-    public bool IsMatch(string url, out Match match)
-    {
-        match = _regexPattern.Match(url);
-        return match.Success;
-    }
+	public bool IsMatch(string url, out Match match)
+	{
+		match = _regexPattern.Match(url);
+		return match.Success;
+	}
 }
 
 public abstract class HttpResponse
 {
-    public abstract byte[] GetBytes();
-    public abstract string ContentType { get; }
+	public abstract byte[] GetBytes();
+	public abstract string ContentType { get; }
 }
 
 public class JsonResponse : HttpResponse
 {
-    private readonly string _json;
+	private readonly string _json;
 
-    public JsonResponse(string json)
-    {
-        object jsonVerified = JsonConvert.DeserializeObject(json)!;
-        _json = JsonConvert.SerializeObject(jsonVerified);
-    }
+	public JsonResponse(string json)
+	{
+		object jsonVerified = JsonConvert.DeserializeObject(json)!;
+		_json = JsonConvert.SerializeObject(jsonVerified);
+	}
 
-    public override byte[] GetBytes()
-    {
-        return Encoding.UTF8.GetBytes(_json);
-    }
+	public override byte[] GetBytes()
+	{
+		return Encoding.UTF8.GetBytes(_json);
+	}
 
-    public override string ContentType => "application/json";
+	public override string ContentType => "application/json";
 }
 
 public class TextResponse : HttpResponse
 {
-    private readonly string _data;
+	private readonly string _data;
 
-    public TextResponse(string data)
-    {
-        _data = data;
-    }
+	public TextResponse(string data)
+	{
+		_data = data;
+	}
 
-    public override byte[] GetBytes()
-    {
-        return Encoding.UTF8.GetBytes(_data);
-    }
+	public override byte[] GetBytes()
+	{
+		return Encoding.UTF8.GetBytes(_data);
+	}
 
-    public override string ContentType => "text/html; charset=UTF-8";
+	public override string ContentType => "text/html; charset=UTF-8";
 }
 
 public class GzipJsonResponse : HttpResponse
 {
-    private readonly string _json;
+	private readonly string _json;
 
-    public GzipJsonResponse(string json)
-    {
-        _json = json;
-    }
+	public GzipJsonResponse(string json)
+	{
+		_json = json;
+	}
 
-    public override byte[] GetBytes()
-    {
-        using (var memoryStream = new MemoryStream())
-        {
-            using (var gzipStream = new GZipStream(memoryStream, CompressionMode.Compress))
-            {
-                var jsonBytes = Encoding.UTF8.GetBytes(_json);
-                gzipStream.Write(jsonBytes, 0, jsonBytes.Length);
-            }
-            return memoryStream.ToArray();
-        }
-    }
+	public override byte[] GetBytes()
+	{
+		using (var memoryStream = new MemoryStream())
+		{
+			using (var gzipStream = new GZipStream(memoryStream, CompressionMode.Compress))
+			{
+				var jsonBytes = Encoding.UTF8.GetBytes(_json);
+				gzipStream.Write(jsonBytes, 0, jsonBytes.Length);
+			}
+			return memoryStream.ToArray();
+		}
+	}
 
-    public override string ContentType => "application/json; charset=utf-8";
+	public override string ContentType => "application/json; charset=utf-8";
 }
 
 public class WebProgram
 {
-    public static void StartWebServer(string address, int port)
-    {
-        Logger logger = new("WebServer");
-        string url = $"http://{address}:{port}/";
-        logger.LogInfo($"Starting server at {url}");
+	public static void StartWebServer(string address, int port)
+	{
+		Logger logger = new("WebServer");
+		string url = $"http://{address}:{port}/";
+		logger.LogInfo($"Starting server at {url}");
 
-        HttpHandler handler = new HttpHandler();
-        HttpListener listener = new HttpListener();
-        listener.Prefixes.Add(url);
-        listener.Start();
+		HttpHandler handler = new HttpHandler();
+		HttpListener listener = new HttpListener();
+		listener.Prefixes.Add(url);
+		listener.Start();
 
-        logger.LogSuccess($"WebServer is listening on {url}...", true);
-        
-        var endpointMethods = handler.GetType().GetMethods(
-            BindingFlags.Public | BindingFlags.Instance
-        );
+		logger.LogSuccess($"WebServer is listening on {url}...", true);
 
-        while (true)
-        {
-            HttpListenerContext context = listener.GetContext();
-            HttpListenerRequest request = context.Request;
-            HttpListenerResponse response = context.Response;
+		var endpointMethods = handler.GetType().GetMethods(
+			BindingFlags.Public | BindingFlags.Instance
+		);
 
-            HttpResponse? httpResponse = null;
-            bool handled = false;
+		while (true)
+		{
+			HttpListenerContext context = listener.GetContext();
+			HttpListenerRequest request = context.Request;
+			HttpListenerResponse response = context.Response;
 
-            logger.LogInfo($"Handling {request.Url} [{request.HttpMethod}]...");
+			HttpResponse? httpResponse = null;
+			bool handled = false;
 
-            foreach (var method in endpointMethods)
-            {
-                var attribute = method.GetCustomAttribute<HttpEndpointAttribute>();
-                if (attribute != null && attribute.IsMatch(request.Url!.AbsolutePath.Split("?").First(), out var match))
-                {
-                    try
-                    {
-                        var parameters = new List<object> { request };
+			logger.LogInfo($"Handling {request.Url} [{request.HttpMethod}]...");
 
-                        foreach (var groupName in attribute._regexPattern.GetGroupNames().Skip(1))
-                        {
-                            parameters.Add(match.Groups[groupName].Value);
-                        }
+			foreach (var method in endpointMethods)
+			{
+				var attribute = method.GetCustomAttribute<HttpEndpointAttribute>();
+				if (attribute != null && attribute.IsMatch(request.Url!.AbsolutePath.Split("?").First(), out var match))
+				{
+					try
+					{
+						var parameters = new List<object> { request };
 
-                        httpResponse = (HttpResponse)method.Invoke(handler, parameters.ToArray())!;
-                        handled = true;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.LogError($"Error invoking handler: {ex.Message} for {method.Name}\n{ex.InnerException}");
-                    }
-                }
-            }
+						foreach (var groupName in attribute._regexPattern.GetGroupNames().Skip(1))
+						{
+							parameters.Add(match.Groups[groupName].Value);
+						}
 
-            if (!handled)
-            {
-                response.StatusCode = 404;
-                httpResponse = new JsonResponse("{\"error\": \"Not Found\"}");
-            }
-            else
-            {
-                response.StatusCode = 200;
-            }
+						httpResponse = (HttpResponse)method.Invoke(handler, parameters.ToArray())!;
+						handled = true;
+						break;
+					}
+					catch (Exception ex)
+					{
+						logger.LogError($"Error invoking handler: {ex.Message} for {method.Name}\n{ex.InnerException}");
+					}
+				}
+			}
 
-            if (httpResponse != null)
-            {
-                response.ContentType = httpResponse.ContentType;
-                byte[] buffer = httpResponse.GetBytes();
-                response.ContentLength64 = buffer.Length;
-                if (httpResponse.GetType() == typeof(GzipJsonResponse))
-                {
-                    response.Headers.Add("Content-Encoding", "gzip");
-                }
-                response.OutputStream.Write(buffer, 0, buffer.Length);
-            }
+			if (!handled)
+			{
+				response.StatusCode = 404;
+				httpResponse = new JsonResponse("{\"error\": \"Not Found\"}");
+			}
+			else
+			{
+				response.StatusCode = 200;
+			}
 
-            response.OutputStream.Close();
-        }
-    }
+			if (httpResponse != null)
+			{
+				response.ContentType = httpResponse.ContentType;
+				byte[] buffer = httpResponse.GetBytes();
+				response.ContentLength64 = buffer.Length;
+				if (httpResponse.GetType() == typeof(GzipJsonResponse))
+				{
+					response.Headers.Add("Content-Encoding", "gzip");
+				}
+				response.OutputStream.Write(buffer, 0, buffer.Length);
+			}
+
+			response.OutputStream.Close();
+		}
+	}
 }

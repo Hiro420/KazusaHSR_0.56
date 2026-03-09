@@ -1,67 +1,65 @@
-﻿using System;
-using System.Collections.Generic;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace KazusaHSR.Utils;
 public class Config
 {
-    public GameServerInfo GameServer { get; set; } = new();
-    public WebServerInfo WebServer { get; set; } = new();
-    public AccountDataBaseInfo AccountDataBase { get; set; } = new();
-    public KeyStoreInfo KeyStore { get; set; } = new();
-    public LogOptionInfo LogOption { get; set; } = new();
+	public GameServerInfo GameServer { get; set; } = new();
+	public WebServerInfo WebServer { get; set; } = new();
+	public AccountDataBaseInfo AccountDataBase { get; set; } = new();
+	public KeyStoreInfo KeyStore { get; set; } = new();
+	public LogOptionInfo LogOption { get; set; } = new();
 
-    public static Config Load(string filePath = "config.json")
-    {
-        if (!System.IO.File.Exists(filePath))
-        {
-            var defaultConfig = new Config();
-            System.IO.File.WriteAllText(filePath, JsonConvert.SerializeObject(defaultConfig, Formatting.Indented));
-            Console.WriteLine("Config file created. Please edit the config file and restart the server.");
-            Environment.Exit(0);
-        }
+	public static Config Load(string filePath = "config.json")
+	{
+		if (!System.IO.File.Exists(filePath))
+		{
+			var defaultConfig = new Config();
+			System.IO.File.WriteAllText(filePath, JsonConvert.SerializeObject(defaultConfig, Formatting.Indented));
+			Console.WriteLine("Config file created. Please edit the config file and restart the server.");
+			Environment.Exit(0);
+		}
 
-        string jsonContent = System.IO.File.ReadAllText(filePath);
-        // in case there are new options added in the future, we can just overwrite the config file with the new options without losing the old options
-        Config data = JsonConvert.DeserializeObject<Config>(jsonContent)!;
-        File.WriteAllText(filePath, JsonConvert.SerializeObject(data, Formatting.Indented));
-        return data;
-    }
+		string jsonContent = System.IO.File.ReadAllText(filePath);
+		// in case there are new options added in the future, we can just overwrite the config file with the new options without losing the old options
+		Config data = JsonConvert.DeserializeObject<Config>(jsonContent)!;
+		File.WriteAllText(filePath, JsonConvert.SerializeObject(data, Formatting.Indented));
+		return data;
+	}
 }
 
 public class LogOptionInfo
 {
-    public bool Commands { get; set; } = true;
-    public bool Connections { get; set; } = true;
-    public bool Packets { get; set; } = true;
+	public bool Commands { get; set; } = true;
+	public bool Connections { get; set; } = true;
+	public bool Packets { get; set; } = true;
 }
 
 public class GameServerInfo
 {
-    public string ServerIP { get; set; } = "127.0.0.1";
-    public int ServerPort { get; set; } = 6969;
-    public bool AutoCreateAccount { get; set; } = true; // unused for now
-    public bool AllowTestCharacters { get; set; } = false;
+	public string ServerIP { get; set; } = "127.0.0.1";
+	public int ServerPort { get; set; } = 6969;
+	public bool AutoCreateAccount { get; set; } = true; // unused for now
+	public bool AllowTestCharacters { get; set; } = false;
 }
 
 public class WebServerInfo
 {
-    public string ServerIP { get; set; } = "127.0.0.1";
-    public int ServerPort { get; set; } = 3000;
-    public bool UseSSL { get; set; } = false;
+	public string ServerIP { get; set; } = "127.0.0.1";
+	public int ServerPort { get; set; } = 3000;
+	public bool UseSSL { get; set; } = false;
 }
 
 // still not used //
 
 public class AccountDataBaseInfo
 {
-    public string Uri { get; set; } = "mongodb://localhost:27017";
-    public string Collection { get; set; } = "KazusaHSR";
-    public bool UseInternal { get; set; } = true;
+	public string Uri { get; set; } = "mongodb://localhost:27017";
+	public string Collection { get; set; } = "KazusaHSR";
+	public bool UseInternal { get; set; } = true;
 }
 
 public class KeyStoreInfo
 {
-    public string Path { get; set; } = "./keystore.p12";
-    public string Password { get; set; } = "Kazusa";
+	public string Path { get; set; } = "./keystore.p12";
+	public string Password { get; set; } = "Kazusa";
 }

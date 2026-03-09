@@ -121,7 +121,7 @@ public class BattleManager
 	private IEnumerable<SceneMonsterWave> GetMonsterInfos(StageRow stageRow)
 	{
 		List<SceneMonsterWave> monsterWaves = new();
-		
+
 		foreach (uint monsterId in stageRow.MonsterList.SelectMany(m => m.Values))
 		{
 			SceneMonsterWave monsterWave = new SceneMonsterWave()
@@ -159,7 +159,7 @@ public class BattleManager
 					.Concat(AssistEntityIds)
 					.ToList();
 				session.player.Scene.EntityManager.DespawnMany(allEntityIds);
-					session.player.Scene.LevelGraphExecutor?.OnMonstersChanged();
+				session.player.Scene.LevelGraphExecutor?.OnMonstersChanged();
 				break;
 			case BattleEndStatus.BattleEndQuit:
 			case BattleEndStatus.BattleEndLose:
