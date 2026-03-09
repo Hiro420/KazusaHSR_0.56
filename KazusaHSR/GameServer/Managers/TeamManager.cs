@@ -110,4 +110,28 @@ public class TeamManager
         _player.SavePersistent();
         return Retcode.RetSucc;
     }
+
+    public Retcode SwapAvatars(int teamIndex, int srcSlot, int dstSlot)
+    {
+        if (teamIndex < 0 || teamIndex >= _player.teamList.Count)
+            return Retcode.RetLineupInvalidIndex;
+
+        var team = _player.teamList[teamIndex];
+        if (srcSlot < 0 || srcSlot >= team.Avatars.Count || dstSlot < 0 || dstSlot >= team.Avatars.Count)
+            return Retcode.RetLineupInvalidIndex;
+
+        if (srcSlot == dstSlot)
+            return Retcode.RetSucc;
+
+        var srcAvatar = team.Avatars[srcSlot];
+        var dstAvatar = team.Avatars[dstSlot];
+        if (srcAvatar == null)
+            return Retcode.RetLineupAvatarNotExist;
+
+        team.Avatars[srcSlot] = dstAvatar;
+        team.Avatars[dstSlot] = srcAvatar;
+
+        _player.SavePersistent();
+        return Retcode.RetSucc;
+    }
 }

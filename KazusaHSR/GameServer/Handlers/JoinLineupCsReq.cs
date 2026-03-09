@@ -27,8 +27,8 @@ internal class HandleJoinLineupCsReq
 			}
 			var ret = session.player.ChallengeManager.SetVirtualAvatarInSlot((int)req.Slot, virtualAvatar);
 			rsp.Retcode = (uint)ret;
-			session.SendPacket(rsp);
 			session.player.ChallengeManager.SendSyncLineupNotify();
+			session.SendPacket(rsp);
 			return;
 		}
 		int teamIndex = (int)req.Index;

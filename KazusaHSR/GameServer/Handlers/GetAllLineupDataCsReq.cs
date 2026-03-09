@@ -22,6 +22,7 @@ internal class HandleGetAllLineupDataCsReq
 		{
 			rsp.LineupLists.Add(team.ToTeamProto());
 		}
+		rsp.LineupLists.Add(session.player.ChallengeManager.GetLineupInfo());
 		session.SendPacket(rsp);
 	}
 }

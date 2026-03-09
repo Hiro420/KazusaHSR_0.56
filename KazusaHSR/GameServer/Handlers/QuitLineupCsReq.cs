@@ -19,7 +19,7 @@ internal class HandleQuitLineupCsReq
 		{
 			Retcode = (uint)Retcode.RetSucc,
 			AvatarId = req.AvatarId,
-			IsVirtual = req.IsVirtual,
+			IsVirtual = req.IsVirtual
 		};
 		if (req.ExtraLineupType == ExtraLineupType.LineupChallenge)
 		{
@@ -28,8 +28,11 @@ internal class HandleQuitLineupCsReq
 			{
 				rsp.Retcode = (uint)ret;
 			}
-			session.SendPacket(rsp);
+			rsp.IsVirtual = false;
+			rsp.IsMainline = false;
+			rsp.PlaneId = session.player.ChallengeManager.VirtualLineup.PlaneId;
 			session.player.ChallengeManager.SendSyncLineupNotify();
+			session.SendPacket(rsp);
 			return;
 		}
 		if (req.Index >= session.player.TeamManager.TeamCount)
