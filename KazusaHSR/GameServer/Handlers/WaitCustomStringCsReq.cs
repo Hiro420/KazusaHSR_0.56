@@ -7,9 +7,6 @@ internal class HandleWaitCustomStringCsReq
 	[Packet.PacketCmdId(PacketId.WaitCustomStringCsReq)]
 	public static void OnPacket(Session session, Packet packet)
 	{
-
-		// TODO: handle by TaskConfig
-
 		WaitCustomStringCsReq req = packet.GetDecodedBody<WaitCustomStringCsReq>();
 		WaitCustomStringScRsp rsp = new WaitCustomStringScRsp()
 		{
@@ -25,6 +22,13 @@ internal class HandleWaitCustomStringCsReq
 		{
 			rsp.SubMissionId = req.SubMissionId;
 		}
+
+		var scene = session.player?.Scene;
+		if (scene != null)
+		{
+			scene.LevelGraphExecutor.OnWaitCustomStringReceived(req.CustomString, req.PropEntityId, req.SubMissionId);
+		}
+
 		session.SendPacket(rsp);
 	}
 }

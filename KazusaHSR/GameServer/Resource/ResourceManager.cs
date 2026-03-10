@@ -32,6 +32,15 @@ public class ResourceManager
 	public List<AdventurePlayerRow> AdventurePlayerExcel { get; set; } = new();
 	public List<ChallengeMazeConfigRow> ChallengeMazeExcel { get; set; } = new();
 	public List<ChallengeTargetConfigRow> ChallengeTargetConfig { get; set; } = new();
+	public List<EquipmentExpItemRow> EquipmentExpItemConfig { get; set; } = new();
+	public List<EquipmentRow> EquipmentConfig { get; set; } = new();
+	public List<EquipmentExpTypeRow> EquipmentExpType { get; set; } = new();
+	public List<QuestDataRow> QuestData { get; set; } = new();
+	public List<WorldLevelRow> WorldLevelConfig { get; set; } = new();
+	public List<FinishWayRow> FinishWay { get; set; } = new();
+	public List<DailyMissionRewardRow> DailyMissionReward { get; set; } = new();
+	public List<DailyMissionRandomDataRow> DailyMissionRandomData { get; set; } = new();
+	public List<MazeBuffRow> MazeBuff { get; set; } = new();
 
 	public Dictionary<uint, Dictionary<uint, LevelFloorInfo>> LevelFloorInfos { get; set; } = new();
 	public Dictionary<uint, Dictionary<uint, Dictionary<uint, LevelGroupInfo>>> LevelGroups { get; set; } = new();

@@ -142,8 +142,12 @@ public class Scene
 		{
 			if (!propInfo.CreateOnInitial)
 				continue;
-			BaseEntity propEntity = new PropEntity(this.session, propInfo, groupId);
+			PropEntity propEntity = new PropEntity(this.session, propInfo, groupId);
 			this.EntityManager.Add(propEntity);
+			if (!string.IsNullOrEmpty(propInfo.InitLevelGraph))
+			{
+				this.LevelGraphExecutor.StartInitGraphForProp(propEntity);
+			}
 		}
 	}
 

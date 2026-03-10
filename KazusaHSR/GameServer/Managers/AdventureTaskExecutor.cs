@@ -75,7 +75,11 @@ public sealed class AdventureTaskExecutor
 				break;
 
 			case AddMazeBuff addMazeBuff:
-				ExecuteAddMazeBuff(addMazeBuff);
+				ExecuteAddMazeBuff(addMazeBuff, _ctx.Request.AbilityTargetEntityId);
+				break;
+
+			case RemoveMazeBuff removeMazeBuff:
+				ExecuteRemoveMazeBuff(removeMazeBuff, _ctx.Request.AbilityTargetEntityId);
 				break;
 
 			default:
@@ -106,6 +110,42 @@ public sealed class AdventureTaskExecutor
 		{
 			case ByHaveAbilityTarget:
 				return _ctx.GetAbilityEntity() != null;
+
+			case ByAnd byAnd:
+				{
+					if (byAnd.PredicateList == null || byAnd.PredicateList.Length == 0)
+						return false;
+					foreach (var child in byAnd.PredicateList)
+					{
+						if (!EvaluatePredicate(child))
+							return false;
+					}
+					return true;
+				}
+
+			case ByAny byAny:
+				{
+					if (byAny.PredicateList == null || byAny.PredicateList.Length == 0)
+						return false;
+					foreach (var child in byAny.PredicateList)
+					{
+						if (EvaluatePredicate(child))
+							return true;
+					}
+					return false;
+				}
+			case ByIsContainAdventureModifier byIsContainAdventureModifier:
+				{
+					_ctx.Session.c.LogInfo($"[AdventureTaskExecutor] Evaluating ByIsContainAdventureModifier for ModifierId={byIsContainAdventureModifier.ModifierName}");
+					IEnumerable<BaseEntity> targetEntities = EvaluateTargets(byIsContainAdventureModifier.TargetType);
+					foreach (var entity in targetEntities)
+					{
+						bool hasModifier = entity.HasAdventureModifier(byIsContainAdventureModifier.ModifierName);
+						_ctx.Session.c.LogInfo($"[AdventureTaskExecutor] Entity {entity._EntityId} has modifier {byIsContainAdventureModifier.ModifierName}: {hasModifier}");
+						return hasModifier;
+					}
+					return false;
+				}
 			default:
 				_ctx.Session.c.LogInfo($"[AdventureTaskExecutor] Unhandled predicate type: {predicate.GetType().FullName}, default=true");
 				return true;
@@ -180,20 +220,67 @@ public sealed class AdventureTaskExecutor
 		}
 	}
 
-	private void ExecuteAddMazeBuff(AddMazeBuff config)
+	private IEnumerable<BaseEntity> EvaluateTargets(TargetEvaluator? targetType)
+	{
+		List<BaseEntity> targetEntities =
+		[
+			_ctx.Session.player.FindEntityByPlayerAvatar(_ctx.Avatar)!
+		];
+
+		if (targetType is not TargetAlias alias)
+			return targetEntities;
+
+		switch (alias.Alias)
+		{
+			case "LightTeamEntity":
+				targetEntities.Clear();
+
+				IEnumerable<PlayerAvatar> teamAvatars = _ctx.Session.player.ChallengeManager.IsInChallenge ?
+					_ctx.Session.player.ChallengeManager.VirtualLineup.AvatarIds.Where(id => id != 0).Select(id => _ctx.Session.player.avatarDict.Values.First(a => a.AvatarId == id))
+					: _ctx.Session.player.GetCurrentLineup().Avatars;
+				foreach (var avatar in teamAvatars)
+				{
+					BaseEntity? entity = _ctx.Session.player.FindEntityByPlayerAvatar(avatar);
+					if (entity != null)
+						targetEntities.Add(entity);
+				}
+				break;
+		}
+
+		return targetEntities;
+	}
+
+	private void ExecuteAddMazeBuff(AddMazeBuff config, uint targetEntityId)
 	{
 		double duration = config.LifeTime != null ? config.LifeTime.Evaluate() : -1;
 		_ctx.Session.c.LogInfo($"[AdventureTaskExecutor] AddMazeBuff invoked: BuffId={config.ID}, Duration={duration}s");
 
 		// todo: handle duration
-		AvatarEntity? avatarEntity = _ctx.Session.player.Scene.EntityManager.TryGetByPlayerAvatar(_ctx.Avatar);
-		if (avatarEntity != null)
+		IEnumerable<BaseEntity> targetEntities = EvaluateTargets(config.TargetType);
+		//AvatarEntity? avatarEntity = _ctx.Session.player.Scene.EntityManager.TryGetByPlayerAvatar(_ctx.Avatar);
+		//if (avatarEntity != null)
+		//{
+		//	avatarEntity.AddMazeBuff(config.ID);
+		//}
+		//else
+		//{
+		//	_ctx.Session.c.LogWarning($"[AdventureTaskExecutor] AddMazeBuff: AvatarEntity not found for AvatarId={_ctx.Avatar.AvatarId}");
+		//}
+		foreach (var entity in targetEntities)
 		{
-			avatarEntity.AddMazeBuff(config.ID);
+			entity.AddMazeBuff(config.ID);
+			_ctx.Session.c.LogInfo($"[AdventureTaskExecutor] Added MazeBuff {config.ID} to Entity {entity._EntityId}");
 		}
-		else
+	}
+
+	private void ExecuteRemoveMazeBuff(RemoveMazeBuff config, uint targetEntityId)
+	{
+		_ctx.Session.c.LogInfo($"[AdventureTaskExecutor] RemoveMazeBuff invoked: BuffId={config.ID}");
+		IEnumerable<BaseEntity> targetEntities = EvaluateTargets(config.TargetType);
+		foreach (var entity in targetEntities)
 		{
-			_ctx.Session.c.LogWarning($"[AdventureTaskExecutor] AddMazeBuff: AvatarEntity not found for AvatarId={_ctx.Avatar.AvatarId}");
+			entity.RemoveMazeBuff(config.ID);
+			_ctx.Session.c.LogInfo($"[AdventureTaskExecutor] Removed MazeBuff {config.ID} from Entity {entity._EntityId}");
 		}
 	}
 }

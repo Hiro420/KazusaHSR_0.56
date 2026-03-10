@@ -83,7 +83,6 @@ public class BattleManager
 		{
 			StageId = CurrentStageIds.First(),
 			LogicRandomSeed = (uint)new Random().Next(),
-			// todo: handle buffs by TaskConfig
 		};
 		foreach (uint stageId in CurrentStageIds)
 		{
@@ -92,8 +91,15 @@ public class BattleManager
 				GetMonsterInfos(stageRow)
 			);
 		}
-		foreach (PlayerAvatar avatarInfo in session.player.GetCurrentLineup().Avatars.Where(a => a != null))
+		//foreach (PlayerAvatar avatarInfo in session.player.GetCurrentLineup().Avatars.Where(a => a != null))
+		for (int i = 0; i < session.player.GetCurrentLineup().Avatars.Count; i++)
 		{
+			PlayerAvatar avatarInfo = session.player.GetCurrentLineup().Avatars[i];
+			if (avatarInfo == null)
+			{
+				//session.c.LogWarning($"Player {session.player.Uid} has null avatar in lineup slot {i}");
+				continue;
+			}
 			battleInfo.BattleAvatarLists.Add(avatarInfo.ToBattleAvatar());
 
 			AvatarEntity? avatarEntity = session.player.FindEntityByPlayerAvatar(avatarInfo);
@@ -109,7 +115,7 @@ public class BattleManager
 					{
 						Id = attachedBuffId,
 						Level = 1,
-						// todo: figure out the rest
+						OwnerIndex = (uint)i,
 					});
 				}
 			}

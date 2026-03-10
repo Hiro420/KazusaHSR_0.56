@@ -54,6 +54,15 @@ public class ResourceLoader
 		this._resourceManager.ShopConfig = LoadExcel<ShopConfigRow>("ShopConfig");
 		this._resourceManager.ShopGoodsConfig = LoadExcel<ShopGoodsConfigRow>("ShopGoodsConfig");
 		this._resourceManager.ShopGoodsGroupConfig = LoadExcel<ShopGoodsGroupConfigRow>("ShopGoodsGroupConfig");
+		this._resourceManager.EquipmentExpItemConfig = LoadExcel<EquipmentExpItemRow>("EquipmentExpItemConfig");
+		this._resourceManager.EquipmentConfig = LoadExcel<EquipmentRow>("EquipmentConfig");
+		this._resourceManager.EquipmentExpType = LoadExcel<EquipmentExpTypeRow>("EquipmentExpType");
+		this._resourceManager.QuestData = LoadExcel<QuestDataRow>("QuestData");
+		this._resourceManager.WorldLevelConfig = LoadExcel<WorldLevelRow>("WorldLevelConfig");
+		this._resourceManager.FinishWay = LoadExcel<FinishWayRow>("FinishWay");
+		this._resourceManager.DailyMissionReward = LoadExcel<DailyMissionRewardRow>("DailyMissionReward");
+		this._resourceManager.DailyMissionRandomData = LoadExcel<DailyMissionRandomDataRow>("DailyMissionRandomData");
+		this._resourceManager.MazeBuff = LoadExcel<MazeBuffRow>("MazeBuff");
 		logger.LogSuccess("Finished loading excels");
 
 		// Load Configs
@@ -176,7 +185,11 @@ public class TaskConfigJsonConverter : JsonConverter
 {
 	public override bool CanConvert(Type objectType) =>
 		objectType == typeof(TaskConfig) ||
-		objectType == typeof(PredicateConfig);
+		objectType == typeof(PredicateConfig) ||
+		objectType == typeof(TargetEvaluator) ||
+		objectType == typeof(TargetSeqOperation) ||
+		objectType == typeof(AbilityConfig) ||
+		objectType == typeof(ModifierConfig);
 
 	public override object? ReadJson(
 		JsonReader reader,

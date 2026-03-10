@@ -1,3 +1,4 @@
+using KazusaHSR.GameServer.PlayerInfos;
 using KazusaHSR.GameServer.Resource;
 using KazusaHSR.Protocol;
 using KazusaHSR.Resource;
@@ -12,6 +13,7 @@ public sealed class SceneLevelGraphExecutor
 	private readonly Logger _log;
 
 	private readonly List<PendingWaitPredicate> _pending = new();
+	private readonly List<PendingWaitCustomString> _pendingWaitCustomStrings = new();
 
 	private sealed class PendingBeHit
 	{
@@ -32,6 +34,16 @@ public sealed class SceneLevelGraphExecutor
 		public WaitPredicateSucc WaitConfig { get; init; } = null!;
 		public List<TaskConfig> NextTasks { get; init; } = new();
 		public uint GroupId { get; init; }
+		public uint OwnerPropEntityId { get; init; }
+	}
+
+	private sealed class PendingWaitCustomString
+	{
+		public string CustomString { get; init; } = string.Empty;
+		public bool WaitOwnerOnly { get; init; }
+		public uint GroupId { get; init; }
+		public uint OwnerPropEntityId { get; init; }
+		public List<TaskConfig> NextTasks { get; init; } = new();
 	}
 
 	public SceneLevelGraphExecutor(Scene scene)
@@ -49,23 +61,43 @@ public sealed class SceneLevelGraphExecutor
 		if (string.IsNullOrEmpty(groupInfo.LevelGraph))
 			return;
 
+		if (string.IsNullOrEmpty(groupInfo.LevelGraph))
+			return;
+
+		StartLevelGraph(groupInfo.LevelGraph, groupId, 0, $"group {groupInfo.GroupGUID}");
+	}
+
+	public void StartInitGraphForProp(PropEntity prop)
+	{
+		if (prop == null)
+			return;
+
+		string path = prop.DbInfo.InitLevelGraph;
+		if (string.IsNullOrEmpty(path))
+			return;
+
+		StartLevelGraph(path, prop.GroupId, prop._EntityId, $"prop GroupId={prop.GroupId}, InstId={prop.DbInfo.ID}");
+	}
+
+	private void StartLevelGraph(string levelGraphPath, uint groupId, uint ownerPropEntityId, string context)
+	{
 		try
 		{
-			var config = LoadLevelGraph(groupInfo.LevelGraph);
+			var config = LoadLevelGraph(levelGraphPath);
 			if (config == null)
 			{
-				_log.LogWarning($"[SceneLevelGraphExecutor] Failed to load LevelGraph '{groupInfo.LevelGraph}' for group {groupInfo.GroupGUID}");
+				_log.LogWarning($"[SceneLevelGraphExecutor] Failed to load LevelGraph '{levelGraphPath}' for {context}");
 				return;
 			}
 
-			_log.LogInfo($"[SceneLevelGraphExecutor] Starting LevelGraph '{groupInfo.LevelGraph}' for group {groupInfo.GroupGUID} (GroupId={groupId})");
+			_log.LogInfo($"[SceneLevelGraphExecutor] Starting LevelGraph '{levelGraphPath}' for {context} (GroupId={groupId}, OwnerEntityId={ownerPropEntityId})");
 
-			ExecuteSequences(config.OnInitSequece ?? Array.Empty<LevelTaskSequence>(), groupId);
-			ExecuteSequences(config.OnStartSequece ?? Array.Empty<LevelTaskSequence>(), groupId);
+			ExecuteSequences(config.OnInitSequece ?? Array.Empty<LevelTaskSequence>(), groupId, ownerPropEntityId);
+			ExecuteSequences(config.OnStartSequece ?? Array.Empty<LevelTaskSequence>(), groupId, ownerPropEntityId);
 		}
 		catch (Exception ex)
 		{
-			_log.LogWarning($"[SceneLevelGraphExecutor] Exception while loading LevelGraph '{groupInfo.LevelGraph}' for group {groupInfo.GroupGUID}: {ex.Message}");
+			_log.LogWarning($"[SceneLevelGraphExecutor] Exception while loading LevelGraph '{levelGraphPath}' for {context}: {ex.Message}");
 		}
 	}
 
@@ -96,6 +128,11 @@ public sealed class SceneLevelGraphExecutor
 
 	private void ExecuteSequences(IEnumerable<LevelTaskSequence> sequences, uint groupId)
 	{
+		ExecuteSequences(sequences, groupId, 0);
+	}
+
+	private void ExecuteSequences(IEnumerable<LevelTaskSequence> sequences, uint groupId, uint ownerPropEntityId)
+	{
 		if (sequences == null)
 			return;
 
@@ -104,11 +141,16 @@ public sealed class SceneLevelGraphExecutor
 			if (seq?.TaskList == null || seq.TaskList.Length == 0)
 				continue;
 
-			ExecuteTaskList(seq.TaskList, groupId);
+			ExecuteTaskList(seq.TaskList, groupId, ownerPropEntityId);
 		}
 	}
 
 	private void ExecuteTaskList(IReadOnlyList<TaskConfig> tasks, uint groupId)
+	{
+		ExecuteTaskList(tasks, groupId, 0);
+	}
+
+	private void ExecuteTaskList(IReadOnlyList<TaskConfig> tasks, uint groupId, uint ownerPropEntityId)
 	{
 		for (int i = 0; i < tasks.Count; i++)
 		{
@@ -119,17 +161,29 @@ public sealed class SceneLevelGraphExecutor
 			if (task is WaitPredicateSucc wait)
 			{
 				var nextTasks = tasks.Skip(i + 1).Where(t => t != null).ToList();
-				RegisterWaitPredicate(wait, nextTasks, groupId);
+				RegisterWaitPredicate(wait, nextTasks, groupId, ownerPropEntityId);
+				break;
+			}
+			else if (task is WaitCustomString waitCustom)
+			{
+				var nextTasks = tasks.Skip(i + 1).Where(t => t != null).ToList();
+				RegisterWaitCustomString(waitCustom, nextTasks, groupId, ownerPropEntityId);
+				break;
+			}
+			else if (task is WaitSecond waitSecond)
+			{
+				var nextTasks = tasks.Skip(i + 1).Where(t => t != null).ToList();
+				ScheduleWaitSecond(waitSecond, nextTasks, groupId, ownerPropEntityId);
 				break;
 			}
 			else
 			{
-				ExecuteImmediateTask(task, groupId);
+				ExecuteImmediateTask(task, groupId, ownerPropEntityId);
 			}
 		}
 	}
 
-	private void RegisterWaitPredicate(WaitPredicateSucc wait, List<TaskConfig> nextTasks, uint groupId)
+	private void RegisterWaitPredicate(WaitPredicateSucc wait, List<TaskConfig> nextTasks, uint groupId, uint ownerPropEntityId)
 	{
 		if (wait.Condition == null)
 		{
@@ -142,13 +196,59 @@ public sealed class SceneLevelGraphExecutor
 			WaitConfig = wait,
 			NextTasks = nextTasks,
 			GroupId = groupId,
+			OwnerPropEntityId = ownerPropEntityId,
 		};
 
 		_pending.Add(pending);
 		_log.LogInfo($"[SceneLevelGraphExecutor] Registered WaitPredicateSucc with condition {wait.Condition.GetType().FullName} for GroupId={groupId}");
 	}
 
-	private void ExecuteImmediateTask(TaskConfig task, uint groupId)
+	private void RegisterWaitCustomString(WaitCustomString config, List<TaskConfig> nextTasks, uint groupId, uint ownerPropEntityId)
+	{
+		if (string.IsNullOrEmpty(config.CustomString))
+		{
+			_log.LogWarning("[SceneLevelGraphExecutor] WaitCustomString missing CustomString, ignoring");
+			return;
+		}
+
+		var pending = new PendingWaitCustomString
+		{
+			CustomString = config.CustomString,
+			WaitOwnerOnly = config.WaitOwnerOnly,
+			GroupId = groupId,
+			OwnerPropEntityId = ownerPropEntityId,
+			NextTasks = nextTasks,
+		};
+
+		_pendingWaitCustomStrings.Add(pending);
+		_log.LogInfo($"[SceneLevelGraphExecutor] Registered WaitCustomString CustomString='{config.CustomString}', WaitOwnerOnly={config.WaitOwnerOnly}, GroupId={groupId}, OwnerEntityId={ownerPropEntityId}");
+	}
+
+	private void ScheduleWaitSecond(WaitSecond config, List<TaskConfig> nextTasks, uint groupId, uint ownerPropEntityId)
+	{
+		int delayMs = (int)(config.WaitTime * 1000f);
+		if (delayMs < 0)
+		{
+			delayMs = 0;
+		}
+
+		_log.LogInfo($"[SceneLevelGraphExecutor] Scheduling WaitSecond for {delayMs} ms (GroupId={groupId}, OwnerEntityId={ownerPropEntityId})");
+
+		_ = Task.Run(async () =>
+		{
+			try
+			{
+				await Task.Delay(delayMs).ConfigureAwait(false);
+				ExecuteTaskList(nextTasks, groupId, ownerPropEntityId);
+			}
+			catch (Exception ex)
+			{
+				_log.LogWarning($"[SceneLevelGraphExecutor] Exception in WaitSecond continuation: {ex.Message}");
+			}
+		});
+	}
+
+	private void ExecuteImmediateTask(TaskConfig task, uint groupId, uint ownerPropEntityId)
 	{
 		switch (task)
 		{
@@ -180,10 +280,150 @@ public sealed class SceneLevelGraphExecutor
 				ExecuteToastPile(toast);
 				break;
 
+			case EnterMap enterMap:
+				ExecuteEnterMap(enterMap);
+				break;
+
+			case AddMazeBuff addMazeBuff:
+				ExecuteAddMazeBuff(addMazeBuff, ownerPropEntityId);
+				break;
+
+			case RemoveMazeBuff removeMazeBuff:
+				ExecuteRemoveMazeBuff(removeMazeBuff, ownerPropEntityId);
+				break;
+
+			// todo AdventureModify for HP, SP etc
+			//case AdventureModifyTeamPlayerSP adventureModifyTeamPlayerSP:
+			//	ExecuteAdventureModifyTeamPlayerSP(adventureModifyTeamPlayerSP);
+			//	break;
+
 			default:
 				_log.LogInfo($"[SceneLevelGraphExecutor] Unhandled task type in level graph: {task.GetType().FullName}");
 				break;
 		}
+	}
+
+	private List<BaseEntity> ResolveTargetType(TargetEvaluator targetType, uint ownerPropEntityId)
+	{
+		List<BaseEntity> result = new();
+
+		if (targetType == null || targetType is not TargetAlias targetAlias)
+		{
+			// all avatars in lineup
+			IEnumerable<PlayerAvatar> teamAvatars = _session.player.ChallengeManager.IsInChallenge ?
+					_session.player.ChallengeManager.VirtualLineup.AvatarIds.Where(id => id != 0).Select(id => _session.player.avatarDict.Values.First(a => a.AvatarId == id))
+					: _session.player.GetCurrentLineup().Avatars;
+			result.AddRange(teamAvatars
+				.Select(_session.player.FindEntityByPlayerAvatar)
+				.Where(e => e != null)
+				.Cast<BaseEntity>()
+				.ToList()
+			);
+			return result;
+		}
+
+		_session.c.LogInfo($"[SceneLevelGraphExecutor] Resolving TargetAlias: {targetAlias.Alias}");
+
+		switch (targetAlias.Alias)
+		{
+			case "TaskActionTarget":
+				if (_scene.EntityManager.TryGet(ownerPropEntityId, out BaseEntity? target))
+				{
+					result.Add(target);
+				}
+				break;
+			case "LineupLeader":
+				if (_session.player.GetCurrentLineup().Leader == null)
+				{
+					_log.LogWarning("[SceneLevelGraphExecutor] LineupLeader alias used but player has no lineup leader");
+					return [];
+				}
+				AvatarEntity? leader = _session.player.FindEntityByPlayerAvatar(_session.player.GetCurrentLineup().Leader!);
+				if (leader != null)
+				{
+					return new() { leader };
+				}
+				break;
+			case "LightTeamEntity":
+				// all avatars in lineup
+				IEnumerable<PlayerAvatar> teamAvatars = _session.player.ChallengeManager.IsInChallenge ?
+						_session.player.ChallengeManager.VirtualLineup.AvatarIds.Select(id => _session.player.avatarDict.Values.First(a => a.AvatarId == id)).Where(a => a != null)!
+						: _session.player.GetCurrentLineup().Avatars;
+				result.AddRange(teamAvatars
+					.Select(_session.player.FindEntityByPlayerAvatar)
+					.Where(e => e != null)
+					.Cast<BaseEntity>()
+					.ToList()
+				);
+				break;
+			default:
+				_log.LogWarning($"[SceneLevelGraphExecutor] Unknown TargetAlias: {targetAlias.Alias}, falling back to LineupLeader");
+				goto case "LineupLeader"; // fallback to LineupLeader for unknown aliases
+		}
+
+		return result;
+	}
+
+	private void ExecuteRemoveMazeBuff(RemoveMazeBuff config, uint ownerPropEntityId)
+	{
+		if (config.ID == 0)
+		{
+			_log.LogWarning("[SceneLevelGraphExecutor] RemoveMazeBuff missing BuffID");
+			return;
+		}
+		List<BaseEntity> resolvedTargets = ResolveTargetType(config.TargetType, ownerPropEntityId);
+		if (resolvedTargets == null || !resolvedTargets.Any())
+		{
+			_log.LogWarning("[SceneLevelGraphExecutor] RemoveMazeBuff failed: could not find entity for lineup leader");
+			return;
+		}
+		foreach (var target in resolvedTargets)
+		{
+			target.RemoveMazeBuff(config.ID, resolvedTargets.Count() == 1);
+		}
+	}
+
+	public void ExecuteAddMazeBuff(AddMazeBuff config, uint ownerPropEntityId)
+	{
+		if (config.ID == 0)
+		{
+			_log.LogWarning("[SceneLevelGraphExecutor] AddMazeBuff missing BuffID");
+			return;
+		}
+		List<BaseEntity> resolvedTargets = ResolveTargetType(config.TargetType, ownerPropEntityId);
+		if (resolvedTargets == null || !resolvedTargets.Any())
+		{
+			_log.LogWarning("[SceneLevelGraphExecutor] AddMazeBuff failed: could not find valid targets");
+			return;
+		}
+		foreach (var target in resolvedTargets)
+		{
+			target.AddMazeBuff(config.ID, resolvedTargets.Count() == 1);
+		}
+	}
+
+	public void ExecuteEnterMap(EnterMap config)
+	{
+		Resource.Excel.MapEntryRow? entryRow = MainApp.resourceManager.MapEntranceExcel.Find(a => a.ID == config.EntranceID);
+		if (entryRow == null)
+		{
+			_log.LogError($"[SceneLevelGraphExecutor] EnterMap: MapEntry not found for EntranceID={config.EntranceID}");
+			return;
+		}
+
+		_session.player.EnterMazeByGroupAnchor(entryRow, config.GroupID, config.AnchorID, out Maze? maze);
+		if (maze == null)
+		{
+			_log.LogError($"[SceneLevelGraphExecutor] EnterMap: Failed to enter maze for EntranceID={config.EntranceID}, GroupID={config.GroupID}, AnchorID={config.AnchorID}");
+			return;
+		}
+		EnterMazeByServerScNotify notify = new EnterMazeByServerScNotify
+		{
+			Maze = maze,
+		};
+		_session.SendPacket(notify);
+		_log.LogInfo($"[SceneLevelGraphExecutor] EnterMap: Player entered maze for EntranceID={config.EntranceID}, GroupID={entryRow.EntranceGroupID}, AnchorID={config.AnchorID}, MazeFloor={maze.Floor}, MapEntryId={maze.MapEntryId}");
+		_session.player.SavePersistent();
 	}
 
 	private void ExecuteChangePropState(ChangePropState config)
@@ -419,6 +659,29 @@ public sealed class SceneLevelGraphExecutor
 		_log.LogInfo($"[SceneLevelGraphExecutor] ToastPile: ImgPath={config.ImgPath}, DescTextID={config.DescTextID}");
 	}
 
+	public void OnWaitCustomStringReceived(string customString, uint propEntityId, uint subMissionId)
+	{
+		if (_pendingWaitCustomStrings.Count == 0)
+			return;
+
+		var matches = _pendingWaitCustomStrings
+			.Where(p => p.CustomString == customString &&
+				(!p.WaitOwnerOnly || (propEntityId != 0 && p.OwnerPropEntityId == propEntityId)))
+			.ToList();
+		if (matches.Count == 0)
+			return;
+
+		foreach (var pending in matches)
+		{
+			_pendingWaitCustomStrings.Remove(pending);
+			if (pending.NextTasks != null && pending.NextTasks.Count > 0)
+			{
+				ExecuteTaskList(pending.NextTasks, pending.GroupId, pending.OwnerPropEntityId);
+			}
+			_log.LogInfo($"[SceneLevelGraphExecutor] WaitCustomString satisfied for CustomString='{pending.CustomString}', GroupId={pending.GroupId}, OwnerEntityId={pending.OwnerPropEntityId}, PropEntityId={propEntityId}, SubMissionId={subMissionId}");
+		}
+	}
+
 	private bool EvaluatePredicate(PredicateConfig? predicate)
 	{
 		if (predicate == null)
@@ -525,7 +788,7 @@ public sealed class SceneLevelGraphExecutor
 
 			if (pending.NextTasks != null && pending.NextTasks.Count > 0)
 			{
-				ExecuteTaskList(pending.NextTasks, groupId);
+				ExecuteTaskList(pending.NextTasks, groupId, pending.OwnerPropEntityId);
 			}
 		}
 	}

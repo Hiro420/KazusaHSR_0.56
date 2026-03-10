@@ -16,6 +16,7 @@ public class Player
 	public uint Level { get; set; }
 	public uint WorldLevel { get; set; }
 	public uint Uid { get; set; }
+	public HashSet<uint> DailyMissionIds { get; set; } = new();
 	public Dictionary<ulong, PlayerAvatar> avatarDict { get; set; } = new();
 	//public Dictionary<ulong, PlayerWeapon> weaponDict { get; set; }
 	public Dictionary<uint, PlayerItem> itemDict { get; set; } = new();
@@ -36,11 +37,12 @@ public class Player
 
 	public Player(Session session, uint uid)
 	{
+		WorldLevelRow maxRow = MainApp.resourceManager.WorldLevelConfig.OrderByDescending(row => row.Level).First();
 		this.session = session;
 		this.Uid = uid;
 		this.Name = "KazusaHSR";
-		this.Level = 30;
-		this.WorldLevel = 3;
+		this.Level = maxRow.MaxPlayerLevel;
+		this.WorldLevel = maxRow.Level;
 		this.Exp = 0;
 		this.Scene = new Scene(session, 10101, 10101001, 0, false); // LevelGroup_P10101_F10101001_G1
 		(this.Pos, this.Rot) = this.Scene.GetDefaultSpawnPosAndRot();
@@ -290,6 +292,40 @@ public class Player
 		this.Scene.PostEnterScene();
 	}
 
+	public void EnterMazeByGroupAnchor(MapEntryRow entrance, uint groupId, uint anchorId, out Maze? maze)
+	{
+		this.Scene = new Scene(session, entrance.PlaneID, entrance.FloorID, entrance.ID);
+		LevelAnchorInfo? anchor = this.Scene.LevelGroups[groupId].AnchorList
+			.FirstOrDefault(prop => prop.ID == anchorId);
+		if (anchor == null)
+		{
+			logger.LogError($"Player {this.Uid} tried to enter maze but entrance prop with anchor ID {anchorId} not found.");
+			maze = null;
+			return;
+		}
+		if (anchor != null)
+		{
+			this.Pos = new Protocol.Vector()
+			{
+				X = (int)(anchor.PosX * 1000),
+				Y = (int)(anchor.PosY * 1000),
+				Z = (int)(anchor.PosZ * 1000),
+			};
+			this.Rot = new Protocol.Vector()
+			{
+				X = 0,
+				Y = (int)(anchor.RotY * 1000),
+				Z = 0,
+			};
+		}
+		else
+		{
+			logger.LogWarning($"Anchor with ID {anchorId} not found in group {groupId} for entrance ID {entrance.ID}.");
+		}
+		maze = this.Scene.ToMazeProto();
+		this.Scene.PostEnterScene();
+	}
+
 	public void EnterMaze(MapEntryRow entrance, uint groupId, out Maze? maze)
 	{
 		uint defaultAnchor = GetDefaultAnchorForEntry(entrance);
@@ -349,5 +385,50 @@ public class Player
 	{
 		LevelFloorInfo levelFloorInfo = MainApp.resourceManager.LevelFloorInfos[entry.PlaneID][entry.FloorID];
 		return levelFloorInfo.StartAnchorID;
+	}
+
+	public void OnLogin()
+	{
+		DailyTaskDataScNotify dailyTaskDataScNotify = new();
+
+		// todo: actually assign based on quest conds and save in database
+		// for now just dummy data
+		int maxTasks = MainApp.resourceManager.DailyMissionReward.Where(i => i.WorldLevel == this.WorldLevel).Count();
+		for (int i = 0; i < maxTasks; i++)
+		{
+			DailyTask dailyTask = GenerateDailyTask();
+			if (dailyTask.MainMissionId != 0)
+			{
+				this.DailyMissionIds.Add(dailyTask.MainMissionId);
+				dailyTaskDataScNotify.DailyTaskLists.Add(dailyTask);
+			}
+		}
+		dailyTaskDataScNotify.FinishedNum = (uint)dailyTaskDataScNotify.DailyTaskLists.Count(t => t.IsFinished);
+		dailyTaskDataScNotify.IsTakenExtraReward = true; // for testing, normally would check if player has taken extra reward for the day
+
+		session.SendPacket(dailyTaskDataScNotify);
+	}
+
+	private DailyTask GenerateDailyTask()
+	{
+		DailyTask task = new();
+
+		IEnumerable<DailyMissionRandomDataRow> randomDataRow = MainApp.resourceManager.DailyMissionRandomData
+			.Where(row => row.DailyMissionID != 0 && !DailyMissionIds.Contains(row.DailyMissionID));
+		// todo: filter by conds as well
+
+		if (!randomDataRow.Any())
+		{
+			session.c.LogError($"No more daily missions available to assign for player {Uid} at world level {WorldLevel}.");
+			return task;
+		}
+
+		// pick random
+		DailyMissionRandomDataRow selectedRow = randomDataRow.OrderBy(_ => Guid.NewGuid()).First();
+
+		task.MainMissionId = selectedRow.DailyMissionID;
+		task.IsFinished = true; // for testing, mark all tasks as finished. normally false
+
+		return task;
 	}
 }

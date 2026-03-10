@@ -15,6 +15,7 @@ internal class HandlePlayerLoginCsReq
 			ServerTimestampMs = (ulong)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
 			BasicInfo = session.player.GetBasicInfo(),
 		};
+		session.player.OnLogin();
 		session.SendPacket(rsp);
 	}
 }

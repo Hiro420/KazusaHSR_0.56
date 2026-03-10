@@ -22,6 +22,7 @@ Main purpose of this project is preservation of the oldest game version we curre
 ### Personal TODO List
 - SP management
 - Commands
-- Prop task configs
+- Merge task executors into one
+- Save fallback scene info db
 
 Copyright© Hiro420
