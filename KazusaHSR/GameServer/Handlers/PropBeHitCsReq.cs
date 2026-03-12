@@ -17,7 +17,7 @@ internal class HandlePropBeHitCsReq
 
 		if (!session.player.Scene.EntityManager.TryGet(req.PropEntityId, out BaseEntity? entity) || entity is not PropEntity prop)
 		{
-			session.c.LogWarning($"Player {session.player.Uid} sent PropBeHitCsReq for non-prop entity {req.PropEntityId}");
+			session.c.Alert($"Player {session.player.Uid} sent PropBeHitCsReq for non-prop entity {req.PropEntityId}");
 			rsp.Retcode = (uint)Retcode.RetSceneUseSkillFail;
 			session.SendPacket(rsp);
 			return;

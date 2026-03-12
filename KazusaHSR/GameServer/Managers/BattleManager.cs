@@ -41,7 +41,7 @@ public class BattleManager
 
 			if (bEntity is not MonsterEntity monsterEntity)
 			{
-				session.c.LogWarning($"Player {session.player.Uid} tried to start monster battle with non-monster entity {entityId}");
+				session.c.Alert($"Player {session.player.Uid} tried to start monster battle with non-monster entity {entityId}");
 				continue;
 			}
 
@@ -53,7 +53,7 @@ public class BattleManager
 
 			if (planeEvent == null || planeEvent.StageID == 0)
 			{
-				session.c.LogWarning($"Player {session.player.Uid} tried to start monster battle but event ID {eventId} not found for monster entity {entityId}");
+				session.c.Alert($"Player {session.player.Uid} tried to start monster battle but event ID {eventId} not found for monster entity {entityId}");
 				continue;
 			}
 
@@ -97,7 +97,7 @@ public class BattleManager
 			PlayerAvatar avatarInfo = session.player.GetCurrentLineup().Avatars[i];
 			if (avatarInfo == null)
 			{
-				//session.c.LogWarning($"Player {session.player.Uid} has null avatar in lineup slot {i}");
+				//session.c.Warn($"Player {session.player.Uid} has null avatar in lineup slot {i}");
 				continue;
 			}
 			battleInfo.BattleAvatarLists.Add(avatarInfo.ToBattleAvatar());
@@ -105,7 +105,7 @@ public class BattleManager
 			AvatarEntity? avatarEntity = session.player.FindEntityByPlayerAvatar(avatarInfo);
 			if (avatarEntity == null)
 			{
-				session.c.LogWarning($"Could not find AvatarEntity for PlayerAvatar {avatarInfo.AvatarId} when building BattleAvatar");
+				session.c.Alert($"Could not find AvatarEntity for PlayerAvatar {avatarInfo.AvatarId} when building BattleAvatar");
 			}
 			else
 			{
@@ -173,7 +173,7 @@ public class BattleManager
 				this.session.player.ResetPosToLastEntrance();
 				break;
 			default:
-				session.c.LogWarning($"Player {session.player.Uid} sent unknown battle end status {req.EndStatus}");
+				session.c.Alert($"Player {session.player.Uid} sent unknown battle end status {req.EndStatus}");
 				rsp.Retcode = (uint)Retcode.RetBattleFail;
 				break;
 		}

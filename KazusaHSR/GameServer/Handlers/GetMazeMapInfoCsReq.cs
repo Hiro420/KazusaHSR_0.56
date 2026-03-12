@@ -13,7 +13,7 @@ internal class HandleGetMazeMapInfoCsReq
 		MapEntryRow? row = MainApp.resourceManager.MapEntranceExcel.FirstOrDefault(m => m.ID == req.EntryId);
 		if (row == null)
 		{
-			session.c.LogWarning($"Player {session.player!.Uid} requested maze map info for invalid EntryId {req.EntryId}");
+			session.c.Alert($"Player {session.player!.Uid} requested maze map info for invalid EntryId {req.EntryId}");
 			GetMazeMapInfoScRsp errorRsp = new GetMazeMapInfoScRsp()
 			{
 				Retcode = (uint)Retcode.RetSceneEntryIdNotMatch,

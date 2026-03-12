@@ -38,7 +38,7 @@ public class PlayerTeam
 		int activeCount = this.Avatars.Count(a => a != null);
 		if (activeCount <= 1)
 		{
-			session.c.LogError("Cannot remove the last avatar from the team");
+			session.c.Fail("Cannot remove the last avatar from the team");
 			return;
 		}
 		int index = this.Avatars.IndexOf(avatar);
@@ -67,7 +67,7 @@ public class PlayerTeam
 	{
 		if (!this.Avatars.Contains(avatar))
 		{
-			session.c.LogError("Cannot set leader to an avatar that is not in the team");
+			session.c.Fail("Cannot set leader to an avatar that is not in the team");
 			return;
 		}
 		this.Leader = avatar;
@@ -79,7 +79,7 @@ public class PlayerTeam
 	{
 		if (slot < 0 || slot >= 4)
 		{
-			session.c.LogError("Slot must be between 0 and 3");
+			session.c.Fail("Slot must be between 0 and 3");
 			return Retcode.RetLineupInvalidIndex;
 		}
 		PlayerAvatar oldAvatar = this.Avatars.Count > slot ? this.Avatars[slot] : null;
@@ -112,7 +112,7 @@ public class PlayerTeam
 	{
 		if (this.Avatars.Count(a => a != null) == 4)
 		{
-			session.c.LogError("Cannot add more than 4 characters to the team"); // should never happen
+			session.c.Fail("Cannot add more than 4 characters to the team"); // should never happen
 			return;
 		}
 		int index = this.Avatars.FindIndex(a => a == null);
@@ -145,7 +145,7 @@ public class PlayerTeam
 			LineupAvatar lineupAvatar = new LineupAvatar()
 			{
 				AvatarType = AvatarType.AvatarFormalType,
-				Hp = avatar.Hp * 10, // some weird decimal thing going on here
+				Hp = avatar.Hp * 1000, // some weird decimal thing going on here
 				Id = avatar.AvatarId,
 				Satiety = 100,
 				Slot = (uint)this.Avatars.IndexOf(avatar),

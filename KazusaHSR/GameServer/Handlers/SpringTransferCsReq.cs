@@ -12,14 +12,14 @@ internal class HandleSpringTransferCsReq
 
 		if (!session.player!.Scene.EntityManager.TryGet(req.PropEntityId, out BaseEntity? springTransferEntity))
 		{
-			session.c.LogError($"Player {session.player!.Uid} tried to use invalid spring transfer prop entity ID {req.PropEntityId}.");
+			session.c.Fail($"Player {session.player!.Uid} tried to use invalid spring transfer prop entity ID {req.PropEntityId}.");
 			rsp.Retcode = (uint)Retcode.RetMazePropNotExist;
 			session.SendPacket(rsp);
 			return;
 		}
 		if (springTransferEntity is not PropEntity springTransferProp)
 		{
-			session.c.LogError($"Player {session.player!.Uid} tried to use non-spring transfer prop entity ID {req.PropEntityId}.");
+			session.c.Fail($"Player {session.player!.Uid} tried to use non-spring transfer prop entity ID {req.PropEntityId}.");
 			rsp.Retcode = (uint)Retcode.RetMazePropNotExist;
 			session.SendPacket(rsp);
 			return;

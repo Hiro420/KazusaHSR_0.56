@@ -26,7 +26,11 @@ public class ResourceLoader
 		_baseResourcePath = baseResourcePath;
 		this._resourceManager = resourceManager;
 
-		logger.LogInfo("Loading excels/configs, this may take a while...");
+		logger.Message("Loading excels/configs, this may take a while...");
+
+		// Load textmap here
+		this._resourceManager.Textmap_en = LoadTextmap("Textmap_en");
+		this._resourceManager.Textmap_cn = LoadTextmap("Textmap_cn");
 
 		// Load excels/configs here
 		this._resourceManager.AvatarExcel = LoadExcel<AvatarRow>("AvatarConfig");
@@ -62,8 +66,9 @@ public class ResourceLoader
 		this._resourceManager.FinishWay = LoadExcel<FinishWayRow>("FinishWay");
 		this._resourceManager.DailyMissionReward = LoadExcel<DailyMissionRewardRow>("DailyMissionReward");
 		this._resourceManager.DailyMissionRandomData = LoadExcel<DailyMissionRandomDataRow>("DailyMissionRandomData");
+		this._resourceManager.EquipmentPromotionConfig = LoadExcel<EquipmentPromotionRow>("EquipmentPromotionConfig");
 		this._resourceManager.MazeBuff = LoadExcel<MazeBuffRow>("MazeBuff");
-		logger.LogSuccess("Finished loading excels");
+		logger.Emit("Finished loading excels");
 
 		// Load Configs
 		foreach (MazePlaneRow row in this._resourceManager.MazePlaneExcel)
@@ -149,7 +154,21 @@ public class ResourceLoader
 			_resourceManager.LocalPlayerConfigs[key] = config;
 		}
 
-		logger.LogSuccess("Finished loading configs");
+		logger.Emit("Finished loading configs");
+	}
+
+	private Dictionary<long, TextmapRow> LoadTextmap(string fileName)
+	{
+		string fullPath = System.IO.Path.Combine(_baseResourcePath, ExcelSubPath, $"{fileName}.json");
+		string json = System.IO.File.ReadAllText(fullPath);
+		Dictionary<long, TextmapRow> rows = JsonConvert.DeserializeObject<Dictionary<long, TextmapRow>>(json) ?? new();
+		if (rows == null)
+		{
+			logger.Fail($"Failed to load Textmap: {fullPath}");
+			return new();
+		}
+		//logger.Success($"Loaded Textmap: {fullPath} with {rows.Count} rows");
+		return rows;
 	}
 
 	private List<T> LoadExcel<T>(string fileName)
@@ -159,10 +178,10 @@ public class ResourceLoader
 		List<T>? rows = Newtonsoft.Json.JsonConvert.DeserializeObject<List<T>>(json);
 		if (rows == null)
 		{
-			logger.LogError($"Failed to load Excel: {fullPath}");
+			logger.Fail($"Failed to load Excel: {fullPath}");
 			return new List<T>();
 		}
-		//logger.LogSuccess($"Loaded Excel: {fullPath} with {rows.Count} rows");
+		//logger.Success($"Loaded Excel: {fullPath} with {rows.Count} rows");
 		return rows;
 	}
 
@@ -173,10 +192,10 @@ public class ResourceLoader
 		T? config = Newtonsoft.Json.JsonConvert.DeserializeObject<T>(json, jsonSerializerSettings);
 		if (config == null)
 		{
-			logger.LogError($"Failed to load Config: {fullPath}");
+			logger.Fail($"Failed to load Config: {fullPath}");
 			throw new Exception($"Failed to load Config: {fullPath}");
 		}
-		//logger.LogSuccess($"Loaded Config: {fullPath}");
+		//logger.Success($"Loaded Config: {fullPath}");
 		return config;
 	}
 }

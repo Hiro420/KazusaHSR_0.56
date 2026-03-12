@@ -87,7 +87,7 @@ public sealed class AbilityManager
 		// We DONT have an EntryAbility to execute :pensive:
 		if (string.IsNullOrEmpty(entryAbilityName))
 		{
-			this._session.c.LogWarning(
+			this._session.c.Alert(
 				$"No EntryAbility found for AdventurePlayer AvatarId={adventurePlayer.AvatarID} " +
 				$"and MazeSkillId={mazeSkill.MazeSkillId}.");
 			return;
@@ -98,7 +98,7 @@ public sealed class AbilityManager
 		if (abilityConfig == null)
 		{
 			// Maybe data issue? Meh, just log and skip executing any ability
-			this._session.c.LogWarning(
+			this._session.c.Alert(
 				$"No AdventureAbilityConfig found for EntryAbility={entryAbilityName} " +
 				$"(AdventurePlayer AvatarId={adventurePlayer.AvatarID}, MazeSkillId={mazeSkill.MazeSkillId}).");
 			return;
@@ -165,7 +165,7 @@ public sealed class AbilityManager
 
 	private void TriggerBattleSkill(PlayerAvatar avatar, SceneCastSkillCsReq req, SceneCastSkillScRsp rsp)
 	{
-		_session.c.LogWarning($"TriggerBattleSkill | {avatar.AvatarId} {req.SkillIndex}");
+		_session.c.Alert($"TriggerBattleSkill | {avatar.AvatarId} {req.SkillIndex}");
 		var ctx = new AdventureAbilityContext(_session, avatar, new AdventureAbilityConfig(), req, rsp);
 		var executor = new AdventureTaskExecutor(ctx);
 		executor.CreateDummyFight();
@@ -177,10 +177,10 @@ public sealed class AbilityManager
 		var ctx = new AdventureAbilityContext(_session, avatar, abilityConfig, req, rsp);
 		var executor = new AdventureTaskExecutor(ctx);
 
-		_session.c.LogInfo($"ExecuteAdventureAbility | {abilityConfig.Name}");
+		_session.c.Message($"ExecuteAdventureAbility | {abilityConfig.Name}");
 		foreach (var kvp in abilityConfig.Modifiers)
 		{
-			_session.c.LogInfo($" - Modifier: {kvp.Key} => {kvp.Value.GetType().Name}");
+			_session.c.Message($" - Modifier: {kvp.Key} => {kvp.Value.GetType().Name}");
 		}
 
 		// TODO: add more tasks

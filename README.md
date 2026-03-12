@@ -18,10 +18,21 @@ Main purpose of this project is preservation of the oldest game version we curre
 - Properly implemented Ability management
 - Working open-world logic
 - Working challenges
+- Useful commands
+
+### Commands
+- help -> lists all commands
+- clear -> clears the cmd window from logs
+- list -> lists all active sessions
+- target -> select a session by uid to use commands on
+- level -> sets your adventure level
+- give \<item|avatar|lightcone\> [id] [amount] [level] -> gives specific item, character or lightcone by ID
+- giveall \<items|avatars\> [level] -> same as give command, but gives everything
+- avatar \<all|id\> \<lv|level|e|eidolon|sl|skill\> \<value\> -> modifies a specific character
 
 ### Personal TODO List
 - SP management
-- Commands
+- Add more Commands
 - Merge task executors into one
 - Save fallback scene info db
 

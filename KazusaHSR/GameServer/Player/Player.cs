@@ -10,11 +10,9 @@ public class Player
 	private Session session { get; set; }
 	public Session Session => session;
 	private Logger logger = new("Player");
-	// Unique peer id for this player within the server process.
-	public uint PeerId { get; set; } = 1;
 	public string Name { get; set; }
 	public uint Level { get; set; }
-	public uint WorldLevel { get; set; }
+	public uint WorldLevel => ResolveWorldLevel(Level);
 	public uint Uid { get; set; }
 	public HashSet<uint> DailyMissionIds { get; set; } = new();
 	public Dictionary<ulong, PlayerAvatar> avatarDict { get; set; } = new();
@@ -37,12 +35,11 @@ public class Player
 
 	public Player(Session session, uint uid)
 	{
-		WorldLevelRow maxRow = MainApp.resourceManager.WorldLevelConfig.OrderByDescending(row => row.Level).First();
+		//WorldLevelRow maxRow = MainApp.resourceManager.WorldLevelConfig.OrderByDescending(row => row.Level).First();
 		this.session = session;
 		this.Uid = uid;
 		this.Name = "KazusaHSR";
-		this.Level = maxRow.MaxPlayerLevel;
-		this.WorldLevel = maxRow.Level;
+		this.Level = 1;
 		this.Exp = 0;
 		this.Scene = new Scene(session, 10101, 10101001, 0, false); // LevelGroup_P10101_F10101001_G1
 		(this.Pos, this.Rot) = this.Scene.GetDefaultSpawnPosAndRot();
@@ -72,7 +69,7 @@ public class Player
 		}
 		catch (Exception ex)
 		{
-			logger.LogError($"Failed to persist player {Uid}: {ex.Message}");
+			logger.Fail($"Failed to persist player {Uid}: {ex.Message}");
 		}
 	}
 
@@ -94,55 +91,79 @@ public class Player
 		this.avatarDict.Add(playerAvatar.Guid, playerAvatar);
 	}
 
-	public void GiveAllAvatars()
+	public List<PlayerAvatar> GiveAllAvatars(uint level = 1)
 	{
+		List<PlayerAvatar> avatars = [];
 		foreach (AvatarRow avatarRow in MainApp.resourceManager.AvatarExcel)
 		{
 			if (avatarRow.AvatarID == 1007)
 				continue;
 			if (avatarRow.Release == false && !MainApp.config.GameServer.AllowTestCharacters)
 				continue;
+			if (session.player.avatarDict.Any(a => a.Value.AvatarId == avatarRow.AvatarID))
+				continue;
 			PlayerAvatar playerAvatar = new(session, avatarRow.AvatarID);
+			playerAvatar.Level = Math.Min(80, level);
+			playerAvatar.PromoteLevel = ResolvePromotionAV(avatarRow, playerAvatar.Level);
+			avatars.Add(playerAvatar);
 			this.avatarDict.Add(playerAvatar.Guid, playerAvatar);
 			if (this.GetCurrentLineup().Avatars.Count(a => a != null) < 4)
 				this.GetCurrentLineup().AddAvatar(session, playerAvatar);
 		}
+		return avatars;
 	}
 
-	public void GiveAllItems()
+	private uint ResolvePromotionAV(AvatarRow avatarRow, uint level)
 	{
-		if (session.player.itemDict.Count > 0)
-		{
-			//logger.LogWarning("Player already has items, skipping GiveAllItems to avoid duplicates.");
-			return;
-		}
+		IEnumerable<AvatarPromotionRow> promotionRows = MainApp.resourceManager.AvatarPromotionExcel.Where(i =>
+			i.MaxLevel >= level && i.AvatarID == avatarRow.AvatarID);
+		return promotionRows.OrderByDescending(i => i.Promotion).Select(i => i.Promotion).FirstOrDefault();
+	}
+
+	public List<PlayerItem> GiveAllItems(uint level = 1)
+	{
+		List<PlayerItem> items = [];
+
 		// Add normal items, not including equipment for now
 		foreach (ItemRow itemRow in MainApp.resourceManager.ItemConfig)
 		{
 			if (itemRow.ID == 0)
 				continue;
 
-			switch (itemRow.ItemType)
+			PlayerItem? item = null;
+
+			if (session.player.itemDict.Values.Any(i => i.ItemId == itemRow.ID))
 			{
-				case Resource.Excel.ItemType.Material:
-				case Resource.Excel.ItemType.Gift:
-				case Resource.Excel.ItemType.Mission:
-				case Resource.Excel.ItemType.Book:
-				case Resource.Excel.ItemType.Food:
-					PlayerItem playerItemfood = new(session, itemRow.ID);
-					playerItemfood.Count = Math.Min(itemRow.PileLimit, 100);
-					this.itemDict.Add(playerItemfood.Guid, playerItemfood);
-					break;
-				case Resource.Excel.ItemType.Virtual:
-					if (itemRow.ID == 0)
-						continue;
-					PlayerItem playerVItem = new(session, itemRow.ID);
-					playerVItem.Count = itemRow.PileLimit != 0 ? itemRow.PileLimit : 999;
-					this.itemDict.Add(playerVItem.Guid, playerVItem);
-					break;
-				default:
-					// skip other item types for now
-					break;
+				// increase the amount instead
+				item = session.player.itemDict.Values.First(i => i.ItemId == itemRow.ID);
+				item.Count = itemRow.PileLimit;
+			}
+			else
+			{
+				switch (itemRow.ItemType)
+				{
+					case Resource.Excel.ItemType.Material:
+					case Resource.Excel.ItemType.Gift:
+					case Resource.Excel.ItemType.Mission:
+					case Resource.Excel.ItemType.Book:
+					case Resource.Excel.ItemType.Food:
+						item = new(session, itemRow.ID);
+						item.Count = Math.Max(itemRow.PileLimit, 100);
+						this.itemDict.Add(item.Guid, item);
+						break;
+					case Resource.Excel.ItemType.Virtual:
+						item = new(session, itemRow.ID);
+						item.Count = Math.Max(itemRow.PileLimit, 999);
+						this.itemDict.Add(item.Guid, item);
+						break;
+					default:
+						// skip other item types for now
+						break;
+				}
+			}
+			if (item != null)
+			{
+				items.Add(item);
 			}
 		}
 
@@ -153,8 +174,12 @@ public class Player
 
 			ItemLightcone equipItem = new(session, itemRow.ID);
 			equipItem.Count = 1; // equipment items are not stackable
+			equipItem.Level = Math.Max(equipItem.GetMaxLevel(), level);
+			items.Add(equipItem);
 			this.itemDict.Add(equipItem.Guid, equipItem);
 		}
+
+		return items;
 	}
 
 	public void InitTeams()
@@ -203,7 +228,7 @@ public class Player
 		AvatarEntity? leaderEntity = FindEntityByPlayerAvatar(lineup.Leader!);
 		if (leaderEntity == null)
 		{
-			logger.LogError("Leader entity not found in scene");
+			logger.Fail("Leader entity not found in scene");
 			return 0;
 		}
 		return leaderEntity._EntityId;
@@ -223,7 +248,7 @@ public class Player
 		else
 		{
 			// fallback to default spawn pos
-			session.c.LogWarning($"Entrance prop for entrance ID {this.Scene.EntranceId} not found in scene. Resetting player {this.Uid} position to default spawn point.");
+			session.c.Alert($"Entrance prop for entrance ID {this.Scene.EntranceId} not found in scene. Resetting player {this.Uid} position to default spawn point.");
 			(this.Pos, this.Rot) = this.Scene.GetDefaultSpawnPosAndRot();
 		}
 		session.SendPacket(new SceneEntityMoveScNotify()
@@ -259,7 +284,7 @@ public class Player
 			.FirstOrDefault(prop => prop.DbInfo.ID == configId);
 		if (entranceProp == null)
 		{
-			logger.LogError($"Player {this.Uid} tried to enter maze but entrance prop with config ID {configId} not found.");
+			logger.Fail($"Player {this.Uid} tried to enter maze but entrance prop with config ID {configId} not found.");
 			maze = null;
 			return;
 		}
@@ -285,7 +310,7 @@ public class Player
 			}
 			else
 			{
-				logger.LogWarning($"Anchor with ID {entranceProp.DbInfo.AnchorID} not found in group {entranceProp.DbInfo.AnchorGroupID} for entrance prop {configId}.");
+				logger.Alert($"Anchor with ID {entranceProp.DbInfo.AnchorID} not found in group {entranceProp.DbInfo.AnchorGroupID} for entrance prop {configId}.");
 			}
 		}
 		maze = this.Scene.ToMazeProto();
@@ -299,7 +324,7 @@ public class Player
 			.FirstOrDefault(prop => prop.ID == anchorId);
 		if (anchor == null)
 		{
-			logger.LogError($"Player {this.Uid} tried to enter maze but entrance prop with anchor ID {anchorId} not found.");
+			logger.Fail($"Player {this.Uid} tried to enter maze but entrance prop with anchor ID {anchorId} not found.");
 			maze = null;
 			return;
 		}
@@ -320,7 +345,7 @@ public class Player
 		}
 		else
 		{
-			logger.LogWarning($"Anchor with ID {anchorId} not found in group {groupId} for entrance ID {entrance.ID}.");
+			logger.Alert($"Anchor with ID {anchorId} not found in group {groupId} for entrance ID {entrance.ID}.");
 		}
 		maze = this.Scene.ToMazeProto();
 		this.Scene.PostEnterScene();
@@ -349,7 +374,7 @@ public class Player
 		}
 		else
 		{
-			logger.LogWarning($"Anchor with ID {defaultAnchor} not found in group {groupId} for entrance ID {entrance.ID}.");
+			logger.Alert($"Anchor with ID {defaultAnchor} not found in group {groupId} for entrance ID {entrance.ID}.");
 		}
 		maze = this.Scene.ToMazeProto();
 		this.Scene.PostEnterScene();
@@ -419,7 +444,7 @@ public class Player
 
 		if (!randomDataRow.Any())
 		{
-			session.c.LogError($"No more daily missions available to assign for player {Uid} at world level {WorldLevel}.");
+			session.c.Fail($"No more daily missions available to assign for player {Uid} at world level {WorldLevel}.");
 			return task;
 		}
 
@@ -430,5 +455,18 @@ public class Player
 		task.IsFinished = true; // for testing, mark all tasks as finished. normally false
 
 		return task;
+	}
+
+	public uint ResolveWorldLevel(uint playerLevel)
+	{
+		WorldLevelRow? row = MainApp.resourceManager.WorldLevelConfig.OrderByDescending(i => i.Level).FirstOrDefault(i =>
+			i.MaxPlayerLevel >= playerLevel
+		);
+		if (row == null)
+		{
+			session.c.Alert($"No world level config found for player level {playerLevel}. Defaulting to world level 0.");
+			return 0;
+		}
+		return row.Level;
 	}
 }

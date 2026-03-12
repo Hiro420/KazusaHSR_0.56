@@ -18,21 +18,21 @@ internal class HandleDressAvatarCsReq
 		};
 		if (avatar == null)
 		{
-			session.c.LogError($"[DressAvatar] Could not find avatar with ID {req.AvatarId}");
+			session.c.Fail($"[DressAvatar] Could not find avatar with ID {req.AvatarId}");
 			rsp.Retcode = (uint)Retcode.RetAvatarNotExist;
 			session.SendPacket(rsp);
 			return;
 		}
 		if (item == null)
 		{
-			session.c.LogError($"[DressAvatar] Could not find item with unique ID {req.EquipmentUniqueId}");
+			session.c.Fail($"[DressAvatar] Could not find item with unique ID {req.EquipmentUniqueId}");
 			rsp.Retcode = (uint)Retcode.RetItemNotExist;
 			session.SendPacket(rsp);
 			return;
 		}
 		if (item is not ItemLightcone lightcone)
 		{
-			session.c.LogError($"[DressAvatar] Item with unique ID {req.EquipmentUniqueId} is not a lightcone");
+			session.c.Fail($"[DressAvatar] Item with unique ID {req.EquipmentUniqueId} is not a lightcone");
 			rsp.Retcode = (uint)Retcode.RetAvatarDressNoEquipment;
 			session.SendPacket(rsp);
 			return;

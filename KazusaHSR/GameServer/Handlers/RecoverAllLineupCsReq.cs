@@ -15,7 +15,7 @@ internal class HandleRecoverAllLineupCsReq
 			AvatarEntity? avatarEntity = session.player.FindEntityByPlayerAvatar(playerAvatar);
 			if (avatarEntity == null)
 			{
-				session.c.LogWarning($"Failed to find avatar entity for player avatar {playerAvatar.Guid} in RecoverAllLineupCsReq");
+				session.c.Alert($"Failed to find avatar entity for player avatar {playerAvatar.Guid} in RecoverAllLineupCsReq");
 				continue;
 			}
 			avatarEntity.RecoverSP();

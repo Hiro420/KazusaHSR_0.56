@@ -83,7 +83,7 @@ public sealed class AdventureTaskExecutor
 				break;
 
 			default:
-				_ctx.Session.c.LogInfo($"[AdventureTaskExecutor] Unhandled task type: {task.GetType().FullName}");
+				_ctx.Session.c.Message($"[AdventureTaskExecutor] Unhandled task type: {task.GetType().FullName}");
 				break;
 		}
 	}
@@ -91,7 +91,7 @@ public sealed class AdventureTaskExecutor
 	private void ExecutePredicateTaskList(PredicateTaskList config)
 	{
 		bool result = EvaluatePredicate(config.Predicate);
-		_ctx.Session.c.LogInfo($"[AdventureTaskExecutor] PredicateTaskList => {(result ? "Success" : "Failed")}");
+		_ctx.Session.c.Message($"[AdventureTaskExecutor] PredicateTaskList => {(result ? "Success" : "Failed")}");
 
 		var list = result ? config.SuccessTaskList : config.FailedTaskList;
 		if (list != null)
@@ -136,18 +136,18 @@ public sealed class AdventureTaskExecutor
 				}
 			case ByIsContainAdventureModifier byIsContainAdventureModifier:
 				{
-					_ctx.Session.c.LogInfo($"[AdventureTaskExecutor] Evaluating ByIsContainAdventureModifier for ModifierId={byIsContainAdventureModifier.ModifierName}");
+					_ctx.Session.c.Message($"[AdventureTaskExecutor] Evaluating ByIsContainAdventureModifier for ModifierId={byIsContainAdventureModifier.ModifierName}");
 					IEnumerable<BaseEntity> targetEntities = EvaluateTargets(byIsContainAdventureModifier.TargetType);
 					foreach (var entity in targetEntities)
 					{
 						bool hasModifier = entity.HasAdventureModifier(byIsContainAdventureModifier.ModifierName);
-						_ctx.Session.c.LogInfo($"[AdventureTaskExecutor] Entity {entity._EntityId} has modifier {byIsContainAdventureModifier.ModifierName}: {hasModifier}");
+						_ctx.Session.c.Message($"[AdventureTaskExecutor] Entity {entity._EntityId} has modifier {byIsContainAdventureModifier.ModifierName}: {hasModifier}");
 						return hasModifier;
 					}
 					return false;
 				}
 			default:
-				_ctx.Session.c.LogInfo($"[AdventureTaskExecutor] Unhandled predicate type: {predicate.GetType().FullName}, default=true");
+				_ctx.Session.c.Message($"[AdventureTaskExecutor] Unhandled predicate type: {predicate.GetType().FullName}, default=true");
 				return true;
 		}
 	}
@@ -168,7 +168,7 @@ public sealed class AdventureTaskExecutor
 		var rsp = _ctx.Response;
 		var entities = session.player.Scene.EntityManager.Entities;
 
-		_ctx.Session.c.LogInfo("[AdventureTaskExecutor] AdventureTriggerAttack invoked");
+		_ctx.Session.c.Message("[AdventureTaskExecutor] AdventureTriggerAttack invoked");
 
 		IEnumerable<uint> hitMonsterIds = (req.HitTargetEntityIdLists ?? Array.Empty<uint>())
 			.Distinct()
@@ -193,7 +193,7 @@ public sealed class AdventureTaskExecutor
 			PropEntity? propEntity = entities[propGuid] as PropEntity;
 			if (propEntity == null)
 			{
-				session.c.LogWarning($"Prop {propGuid} is not a valid PropEntity? WTF?");
+				session.c.Alert($"Prop {propGuid} is not a valid PropEntity? WTF?");
 				continue;
 			}
 			session.player.Scene.LevelGraphExecutor?.OnPropBeHit(propEntity);
@@ -202,17 +202,17 @@ public sealed class AdventureTaskExecutor
 
 	private void ExecuteAdventureModifyTeamPlayerHP(AdventureModifyTeamPlayerHP config)
 	{
-		_ctx.Session.c.LogInfo("[AdventureTaskExecutor] AdventureModifyTeamPlayerHP invoked (stub)");
+		_ctx.Session.c.Message("[AdventureTaskExecutor] AdventureModifyTeamPlayerHP invoked (stub)");
 	}
 
 	private void ExecuteAdventureFireProjectile(AdventureFireProjectile config)
 	{
-		_ctx.Session.c.LogInfo("[AdventureTaskExecutor] AdventureFireProjectile invoked");
+		_ctx.Session.c.Message("[AdventureTaskExecutor] AdventureFireProjectile invoked");
 		bool isHit = _ctx.Request.HitTargetEntityIdLists != null &&
 			_ctx.Request.HitTargetEntityIdLists.Length > 0;
 		if (isHit)
 		{
-			_ctx.Session.c.LogInfo("[AdventureTaskExecutor] Projectile hit detected, executing OnProjectileHit tasks");
+			_ctx.Session.c.Message("[AdventureTaskExecutor] Projectile hit detected, executing OnProjectileHit tasks");
 			if (config.OnProjectileHit != null)
 				ExecuteTasks(config.OnProjectileHit);
 			else
@@ -253,7 +253,7 @@ public sealed class AdventureTaskExecutor
 	private void ExecuteAddMazeBuff(AddMazeBuff config, uint targetEntityId)
 	{
 		double duration = config.LifeTime != null ? config.LifeTime.Evaluate() : -1;
-		_ctx.Session.c.LogInfo($"[AdventureTaskExecutor] AddMazeBuff invoked: BuffId={config.ID}, Duration={duration}s");
+		_ctx.Session.c.Message($"[AdventureTaskExecutor] AddMazeBuff invoked: BuffId={config.ID}, Duration={duration}s");
 
 		// todo: handle duration
 		IEnumerable<BaseEntity> targetEntities = EvaluateTargets(config.TargetType);
@@ -264,23 +264,23 @@ public sealed class AdventureTaskExecutor
 		//}
 		//else
 		//{
-		//	_ctx.Session.c.LogWarning($"[AdventureTaskExecutor] AddMazeBuff: AvatarEntity not found for AvatarId={_ctx.Avatar.AvatarId}");
+		//	_ctx.Session.c.Warn($"[AdventureTaskExecutor] AddMazeBuff: AvatarEntity not found for AvatarId={_ctx.Avatar.AvatarId}");
 		//}
 		foreach (var entity in targetEntities)
 		{
 			entity.AddMazeBuff(config.ID);
-			_ctx.Session.c.LogInfo($"[AdventureTaskExecutor] Added MazeBuff {config.ID} to Entity {entity._EntityId}");
+			_ctx.Session.c.Message($"[AdventureTaskExecutor] Added MazeBuff {config.ID} to Entity {entity._EntityId}");
 		}
 	}
 
 	private void ExecuteRemoveMazeBuff(RemoveMazeBuff config, uint targetEntityId)
 	{
-		_ctx.Session.c.LogInfo($"[AdventureTaskExecutor] RemoveMazeBuff invoked: BuffId={config.ID}");
+		_ctx.Session.c.Message($"[AdventureTaskExecutor] RemoveMazeBuff invoked: BuffId={config.ID}");
 		IEnumerable<BaseEntity> targetEntities = EvaluateTargets(config.TargetType);
 		foreach (var entity in targetEntities)
 		{
 			entity.RemoveMazeBuff(config.ID);
-			_ctx.Session.c.LogInfo($"[AdventureTaskExecutor] Removed MazeBuff {config.ID} from Entity {entity._EntityId}");
+			_ctx.Session.c.Message($"[AdventureTaskExecutor] Removed MazeBuff {config.ID} from Entity {entity._EntityId}");
 		}
 	}
 }

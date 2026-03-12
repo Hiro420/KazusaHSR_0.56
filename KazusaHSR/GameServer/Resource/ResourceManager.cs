@@ -41,6 +41,7 @@ public class ResourceManager
 	public List<DailyMissionRewardRow> DailyMissionReward { get; set; } = new();
 	public List<DailyMissionRandomDataRow> DailyMissionRandomData { get; set; } = new();
 	public List<MazeBuffRow> MazeBuff { get; set; } = new();
+	public List<EquipmentPromotionRow> EquipmentPromotionConfig { get; set; } = new();
 
 	public Dictionary<uint, Dictionary<uint, LevelFloorInfo>> LevelFloorInfos { get; set; } = new();
 	public Dictionary<uint, Dictionary<uint, Dictionary<uint, LevelGroupInfo>>> LevelGroups { get; set; } = new();
@@ -48,13 +49,16 @@ public class ResourceManager
 	public Dictionary<string, AdventureAbilityConfig> AdventureAbilityConfigs { get; set; } = new();
 	public Dictionary<string, AdventureCharacterConfig> LocalPlayerConfigs { get; set; } = new();
 
+	public Dictionary<long, TextmapRow> Textmap_en { get; set; } = new();
+	public Dictionary<long, TextmapRow> Textmap_cn { get; set; } = new();
+
 	// :3
 	public ResourceManager(string baseResourcePath = "resources")
 	{
 		Logger c = new("ResourceLoader");
-		c.LogInfo("Loading Resources, this may take a while..");
+		c.Message("Loading Resources, this may take a while..");
 		this.loader = new(this, baseResourcePath);
-		c.LogSuccess("Loaded Resources");
+		c.Emit("Loaded Resources");
 	}
 
 	public AdventureAbilityConfig? GetAdventureAbilityConfig(string abilityName)

@@ -81,7 +81,7 @@ public class ShopManager
 		}
 		else
 		{
-			_player.Session.c.LogError($"ItemID {itemInfo.ItemId} not found in ItemRow, cannot add to inventory");
+			_player.Session.c.Fail($"ItemID {itemInfo.ItemId} not found in ItemRow, cannot add to inventory");
 		}
 
 		if (itemInfo.BoughtTimes < itemInfo.SourceRow.LimitTimes && itemInfo.SourceRow.LimitTimes != 0)

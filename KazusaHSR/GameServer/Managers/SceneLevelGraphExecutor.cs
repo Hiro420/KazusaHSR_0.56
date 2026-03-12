@@ -86,18 +86,18 @@ public sealed class SceneLevelGraphExecutor
 			var config = LoadLevelGraph(levelGraphPath);
 			if (config == null)
 			{
-				_log.LogWarning($"[SceneLevelGraphExecutor] Failed to load LevelGraph '{levelGraphPath}' for {context}");
+				_log.Alert($"[SceneLevelGraphExecutor] Failed to load LevelGraph '{levelGraphPath}' for {context}");
 				return;
 			}
 
-			_log.LogInfo($"[SceneLevelGraphExecutor] Starting LevelGraph '{levelGraphPath}' for {context} (GroupId={groupId}, OwnerEntityId={ownerPropEntityId})");
+			_log.Message($"[SceneLevelGraphExecutor] Starting LevelGraph '{levelGraphPath}' for {context} (GroupId={groupId}, OwnerEntityId={ownerPropEntityId})");
 
 			ExecuteSequences(config.OnInitSequece ?? Array.Empty<LevelTaskSequence>(), groupId, ownerPropEntityId);
 			ExecuteSequences(config.OnStartSequece ?? Array.Empty<LevelTaskSequence>(), groupId, ownerPropEntityId);
 		}
 		catch (Exception ex)
 		{
-			_log.LogWarning($"[SceneLevelGraphExecutor] Exception while loading LevelGraph '{levelGraphPath}' for {context}: {ex.Message}");
+			_log.Alert($"[SceneLevelGraphExecutor] Exception while loading LevelGraph '{levelGraphPath}' for {context}: {ex.Message}");
 		}
 	}
 
@@ -111,7 +111,7 @@ public sealed class SceneLevelGraphExecutor
 
 			if (!File.Exists(fullPath))
 			{
-				_log.LogWarning($"[SceneLevelGraphExecutor] LevelGraph file not found: {fullPath}");
+				_log.Alert($"[SceneLevelGraphExecutor] LevelGraph file not found: {fullPath}");
 				return null;
 			}
 
@@ -121,7 +121,7 @@ public sealed class SceneLevelGraphExecutor
 		}
 		catch (Exception ex)
 		{
-			_log.LogWarning($"[SceneLevelGraphExecutor] Failed to load LevelGraph '{levelGraphPath}': {ex.Message}");
+			_log.Alert($"[SceneLevelGraphExecutor] Failed to load LevelGraph '{levelGraphPath}': {ex.Message}");
 			return null;
 		}
 	}
@@ -187,7 +187,7 @@ public sealed class SceneLevelGraphExecutor
 	{
 		if (wait.Condition == null)
 		{
-			_log.LogWarning("[SceneLevelGraphExecutor] WaitPredicateSucc has null Condition, ignoring");
+			_log.Alert("[SceneLevelGraphExecutor] WaitPredicateSucc has null Condition, ignoring");
 			return;
 		}
 
@@ -200,14 +200,14 @@ public sealed class SceneLevelGraphExecutor
 		};
 
 		_pending.Add(pending);
-		_log.LogInfo($"[SceneLevelGraphExecutor] Registered WaitPredicateSucc with condition {wait.Condition.GetType().FullName} for GroupId={groupId}");
+		_log.Message($"[SceneLevelGraphExecutor] Registered WaitPredicateSucc with condition {wait.Condition.GetType().FullName} for GroupId={groupId}");
 	}
 
 	private void RegisterWaitCustomString(WaitCustomString config, List<TaskConfig> nextTasks, uint groupId, uint ownerPropEntityId)
 	{
 		if (string.IsNullOrEmpty(config.CustomString))
 		{
-			_log.LogWarning("[SceneLevelGraphExecutor] WaitCustomString missing CustomString, ignoring");
+			_log.Alert("[SceneLevelGraphExecutor] WaitCustomString missing CustomString, ignoring");
 			return;
 		}
 
@@ -221,7 +221,7 @@ public sealed class SceneLevelGraphExecutor
 		};
 
 		_pendingWaitCustomStrings.Add(pending);
-		_log.LogInfo($"[SceneLevelGraphExecutor] Registered WaitCustomString CustomString='{config.CustomString}', WaitOwnerOnly={config.WaitOwnerOnly}, GroupId={groupId}, OwnerEntityId={ownerPropEntityId}");
+		_log.Message($"[SceneLevelGraphExecutor] Registered WaitCustomString CustomString='{config.CustomString}', WaitOwnerOnly={config.WaitOwnerOnly}, GroupId={groupId}, OwnerEntityId={ownerPropEntityId}");
 	}
 
 	private void ScheduleWaitSecond(WaitSecond config, List<TaskConfig> nextTasks, uint groupId, uint ownerPropEntityId)
@@ -232,7 +232,7 @@ public sealed class SceneLevelGraphExecutor
 			delayMs = 0;
 		}
 
-		_log.LogInfo($"[SceneLevelGraphExecutor] Scheduling WaitSecond for {delayMs} ms (GroupId={groupId}, OwnerEntityId={ownerPropEntityId})");
+		_log.Message($"[SceneLevelGraphExecutor] Scheduling WaitSecond for {delayMs} ms (GroupId={groupId}, OwnerEntityId={ownerPropEntityId})");
 
 		_ = Task.Run(async () =>
 		{
@@ -243,7 +243,7 @@ public sealed class SceneLevelGraphExecutor
 			}
 			catch (Exception ex)
 			{
-				_log.LogWarning($"[SceneLevelGraphExecutor] Exception in WaitSecond continuation: {ex.Message}");
+				_log.Alert($"[SceneLevelGraphExecutor] Exception in WaitSecond continuation: {ex.Message}");
 			}
 		});
 	}
@@ -298,7 +298,7 @@ public sealed class SceneLevelGraphExecutor
 			//	break;
 
 			default:
-				_log.LogInfo($"[SceneLevelGraphExecutor] Unhandled task type in level graph: {task.GetType().FullName}");
+				_log.Message($"[SceneLevelGraphExecutor] Unhandled task type in level graph: {task.GetType().FullName}");
 				break;
 		}
 	}
@@ -322,7 +322,7 @@ public sealed class SceneLevelGraphExecutor
 			return result;
 		}
 
-		_session.c.LogInfo($"[SceneLevelGraphExecutor] Resolving TargetAlias: {targetAlias.Alias}");
+		_session.c.Message($"[SceneLevelGraphExecutor] Resolving TargetAlias: {targetAlias.Alias}");
 
 		switch (targetAlias.Alias)
 		{
@@ -335,7 +335,7 @@ public sealed class SceneLevelGraphExecutor
 			case "LineupLeader":
 				if (_session.player.GetCurrentLineup().Leader == null)
 				{
-					_log.LogWarning("[SceneLevelGraphExecutor] LineupLeader alias used but player has no lineup leader");
+					_log.Alert("[SceneLevelGraphExecutor] LineupLeader alias used but player has no lineup leader");
 					return [];
 				}
 				AvatarEntity? leader = _session.player.FindEntityByPlayerAvatar(_session.player.GetCurrentLineup().Leader!);
@@ -357,7 +357,7 @@ public sealed class SceneLevelGraphExecutor
 				);
 				break;
 			default:
-				_log.LogWarning($"[SceneLevelGraphExecutor] Unknown TargetAlias: {targetAlias.Alias}, falling back to LineupLeader");
+				_log.Alert($"[SceneLevelGraphExecutor] Unknown TargetAlias: {targetAlias.Alias}, falling back to LineupLeader");
 				goto case "LineupLeader"; // fallback to LineupLeader for unknown aliases
 		}
 
@@ -368,13 +368,13 @@ public sealed class SceneLevelGraphExecutor
 	{
 		if (config.ID == 0)
 		{
-			_log.LogWarning("[SceneLevelGraphExecutor] RemoveMazeBuff missing BuffID");
+			_log.Alert("[SceneLevelGraphExecutor] RemoveMazeBuff missing BuffID");
 			return;
 		}
 		List<BaseEntity> resolvedTargets = ResolveTargetType(config.TargetType, ownerPropEntityId);
 		if (resolvedTargets == null || !resolvedTargets.Any())
 		{
-			_log.LogWarning("[SceneLevelGraphExecutor] RemoveMazeBuff failed: could not find entity for lineup leader");
+			_log.Alert("[SceneLevelGraphExecutor] RemoveMazeBuff failed: could not find entity for lineup leader");
 			return;
 		}
 		foreach (var target in resolvedTargets)
@@ -387,13 +387,13 @@ public sealed class SceneLevelGraphExecutor
 	{
 		if (config.ID == 0)
 		{
-			_log.LogWarning("[SceneLevelGraphExecutor] AddMazeBuff missing BuffID");
+			_log.Alert("[SceneLevelGraphExecutor] AddMazeBuff missing BuffID");
 			return;
 		}
 		List<BaseEntity> resolvedTargets = ResolveTargetType(config.TargetType, ownerPropEntityId);
 		if (resolvedTargets == null || !resolvedTargets.Any())
 		{
-			_log.LogWarning("[SceneLevelGraphExecutor] AddMazeBuff failed: could not find valid targets");
+			_log.Alert("[SceneLevelGraphExecutor] AddMazeBuff failed: could not find valid targets");
 			return;
 		}
 		foreach (var target in resolvedTargets)
@@ -407,14 +407,14 @@ public sealed class SceneLevelGraphExecutor
 		Resource.Excel.MapEntryRow? entryRow = MainApp.resourceManager.MapEntranceExcel.Find(a => a.ID == config.EntranceID);
 		if (entryRow == null)
 		{
-			_log.LogError($"[SceneLevelGraphExecutor] EnterMap: MapEntry not found for EntranceID={config.EntranceID}");
+			_log.Fail($"[SceneLevelGraphExecutor] EnterMap: MapEntry not found for EntranceID={config.EntranceID}");
 			return;
 		}
 
 		_session.player.EnterMazeByGroupAnchor(entryRow, config.GroupID, config.AnchorID, out Maze? maze);
 		if (maze == null)
 		{
-			_log.LogError($"[SceneLevelGraphExecutor] EnterMap: Failed to enter maze for EntranceID={config.EntranceID}, GroupID={config.GroupID}, AnchorID={config.AnchorID}");
+			_log.Fail($"[SceneLevelGraphExecutor] EnterMap: Failed to enter maze for EntranceID={config.EntranceID}, GroupID={config.GroupID}, AnchorID={config.AnchorID}");
 			return;
 		}
 		EnterMazeByServerScNotify notify = new EnterMazeByServerScNotify
@@ -422,7 +422,7 @@ public sealed class SceneLevelGraphExecutor
 			Maze = maze,
 		};
 		_session.SendPacket(notify);
-		_log.LogInfo($"[SceneLevelGraphExecutor] EnterMap: Player entered maze for EntranceID={config.EntranceID}, GroupID={entryRow.EntranceGroupID}, AnchorID={config.AnchorID}, MazeFloor={maze.Floor}, MapEntryId={maze.MapEntryId}");
+		_log.Message($"[SceneLevelGraphExecutor] EnterMap: Player entered maze for EntranceID={config.EntranceID}, GroupID={entryRow.EntranceGroupID}, AnchorID={config.AnchorID}, MazeFloor={maze.Floor}, MapEntryId={maze.MapEntryId}");
 		_session.player.SavePersistent();
 	}
 
@@ -430,7 +430,7 @@ public sealed class SceneLevelGraphExecutor
 	{
 		if (config.DynamicGroupID == null || config.DynamicGroupPropID == null)
 		{
-			_log.LogWarning("[SceneLevelGraphExecutor] ChangePropState missing DynamicGroupID or DynamicGroupPropID");
+			_log.Alert("[SceneLevelGraphExecutor] ChangePropState missing DynamicGroupID or DynamicGroupPropID");
 			return;
 		}
 
@@ -443,7 +443,7 @@ public sealed class SceneLevelGraphExecutor
 
 		if (propEntity == null)
 		{
-			_log.LogWarning($"[SceneLevelGraphExecutor] ChangePropState: Prop not found for GroupId={groupId}, InstId={instId}");
+			_log.Alert($"[SceneLevelGraphExecutor] ChangePropState: Prop not found for GroupId={groupId}, InstId={instId}");
 			return;
 		}
 
@@ -453,7 +453,7 @@ public sealed class SceneLevelGraphExecutor
 		notify.EntityLists.Add(propEntity.ToSceneEntityInfo());
 		_session.SendPacket(notify);
 
-		_log.LogInfo($"[SceneLevelGraphExecutor] ChangePropState applied: GroupId={groupId}, InstId={instId}, NewState={config.State}");
+		_log.Message($"[SceneLevelGraphExecutor] ChangePropState applied: GroupId={groupId}, InstId={instId}, NewState={config.State}");
 
 		OnMonstersChanged();
 	}
@@ -463,7 +463,7 @@ public sealed class SceneLevelGraphExecutor
 		if (config.MainGroupID == null || config.MainGroupPropID == null ||
 			config.SubGroupID == null || config.SubGroupPropID == null)
 		{
-			_log.LogWarning("[SceneLevelGraphExecutor] SyncSubPropState missing IDs");
+			_log.Alert("[SceneLevelGraphExecutor] SyncSubPropState missing IDs");
 			return;
 		}
 
@@ -477,7 +477,7 @@ public sealed class SceneLevelGraphExecutor
 			.FirstOrDefault(p => p.GroupId == mainGroupId && p.DbInfo.ID == mainPropId);
 		if (mainProp == null)
 		{
-			_log.LogWarning($"[SceneLevelGraphExecutor] SyncSubPropState: main prop not found for GroupId={mainGroupId}, InstId={mainPropId}");
+			_log.Alert($"[SceneLevelGraphExecutor] SyncSubPropState: main prop not found for GroupId={mainGroupId}, InstId={mainPropId}");
 			return;
 		}
 
@@ -491,7 +491,7 @@ public sealed class SceneLevelGraphExecutor
 			.FirstOrDefault(p => p.GroupId == subGroupId && p.DbInfo.ID == subPropId);
 		if (subProp == null)
 		{
-			_log.LogWarning($"[SceneLevelGraphExecutor] SyncSubPropState: sub prop not found for GroupId={subGroupId}, InstId={subPropId}");
+			_log.Alert($"[SceneLevelGraphExecutor] SyncSubPropState: sub prop not found for GroupId={subGroupId}, InstId={subPropId}");
 			return;
 		}
 
@@ -501,7 +501,7 @@ public sealed class SceneLevelGraphExecutor
 		notify.EntityLists.Add(subProp.ToSceneEntityInfo());
 		_session.SendPacket(notify);
 
-		_log.LogInfo($"[SceneLevelGraphExecutor] SyncSubPropState applied: Main({mainGroupId},{mainPropId}) -> Sub({subGroupId},{subPropId}) NewState={config.SubState}");
+		_log.Message($"[SceneLevelGraphExecutor] SyncSubPropState applied: Main({mainGroupId},{mainPropId}) -> Sub({subGroupId},{subPropId}) NewState={config.SubState}");
 
 		OnMonstersChanged();
 	}
@@ -510,7 +510,7 @@ public sealed class SceneLevelGraphExecutor
 	{
 		if (config.GroupID == null || config.GroupPropID == null)
 		{
-			_log.LogWarning("[SceneLevelGraphExecutor] SyncAllSubPropState missing IDs");
+			_log.Alert("[SceneLevelGraphExecutor] SyncAllSubPropState missing IDs");
 			return;
 		}
 
@@ -522,7 +522,7 @@ public sealed class SceneLevelGraphExecutor
 			.FirstOrDefault(p => p.GroupId == groupId && p.DbInfo.ID == propId);
 		if (mainProp == null)
 		{
-			_log.LogWarning($"[SceneLevelGraphExecutor] SyncAllSubPropState: main prop not found for GroupId={groupId}, InstId={propId}");
+			_log.Alert($"[SceneLevelGraphExecutor] SyncAllSubPropState: main prop not found for GroupId={groupId}, InstId={propId}");
 			return;
 		}
 
@@ -542,7 +542,7 @@ public sealed class SceneLevelGraphExecutor
 		}
 		_session.SendPacket(notify);
 
-		_log.LogInfo($"[SceneLevelGraphExecutor] SyncAllSubPropState applied for GroupId={groupId}, MainInstId={propId}, Count={subProps.Count}");
+		_log.Message($"[SceneLevelGraphExecutor] SyncAllSubPropState applied for GroupId={groupId}, MainInstId={propId}, Count={subProps.Count}");
 
 		OnMonstersChanged();
 	}
@@ -551,7 +551,7 @@ public sealed class SceneLevelGraphExecutor
 	{
 		if (config.GroupPropID == null || config.OnBeHit == null || config.OnBeHit.Length == 0)
 		{
-			_log.LogWarning("[SceneLevelGraphExecutor] LoopWaitBeHit missing GroupPropID or OnBeHit tasks");
+			_log.Alert("[SceneLevelGraphExecutor] LoopWaitBeHit missing GroupPropID or OnBeHit tasks");
 			return;
 		}
 
@@ -562,7 +562,7 @@ public sealed class SceneLevelGraphExecutor
 			.FirstOrDefault(p => p.GroupId == groupId && p.DbInfo.ID == instId);
 		if (prop == null)
 		{
-			_log.LogWarning($"[SceneLevelGraphExecutor] LoopWaitBeHit: prop not found for GroupId={groupId}, InstId={instId}");
+			_log.Alert($"[SceneLevelGraphExecutor] LoopWaitBeHit: prop not found for GroupId={groupId}, InstId={instId}");
 			return;
 		}
 
@@ -588,14 +588,14 @@ public sealed class SceneLevelGraphExecutor
 			});
 		}
 
-		_log.LogInfo($"[SceneLevelGraphExecutor] Registered LoopWaitBeHit for GroupId={groupId}, InstId={instId}, TaskCount={config.OnBeHit.Length}");
+		_log.Message($"[SceneLevelGraphExecutor] Registered LoopWaitBeHit for GroupId={groupId}, InstId={instId}, TaskCount={config.OnBeHit.Length}");
 	}
 
 	private void ExecuteComparePropState(ComparePropState config, uint fallbackGroupId)
 	{
 		if (config.GroupID == null || config.GroupPropID == null)
 		{
-			_log.LogWarning("[SceneLevelGraphExecutor] ComparePropState missing IDs");
+			_log.Alert("[SceneLevelGraphExecutor] ComparePropState missing IDs");
 			return;
 		}
 
@@ -607,7 +607,7 @@ public sealed class SceneLevelGraphExecutor
 			.FirstOrDefault(p => p.GroupId == groupId && p.DbInfo.ID == instId);
 		if (prop == null)
 		{
-			_log.LogWarning($"[SceneLevelGraphExecutor] ComparePropState: prop not found for GroupId={groupId}, InstId={instId}");
+			_log.Alert($"[SceneLevelGraphExecutor] ComparePropState: prop not found for GroupId={groupId}, InstId={instId}");
 			return;
 		}
 
@@ -624,7 +624,7 @@ public sealed class SceneLevelGraphExecutor
 	{
 		if (config.GroupID == null || config.GroupPropID == null)
 		{
-			_log.LogWarning("[SceneLevelGraphExecutor] ReversePropState missing IDs");
+			_log.Alert("[SceneLevelGraphExecutor] ReversePropState missing IDs");
 			return;
 		}
 
@@ -636,7 +636,7 @@ public sealed class SceneLevelGraphExecutor
 			.FirstOrDefault(p => p.GroupId == groupId && p.DbInfo.ID == instId);
 		if (prop == null)
 		{
-			_log.LogWarning($"[SceneLevelGraphExecutor] ReversePropState: prop not found for GroupId={groupId}, InstId={instId}");
+			_log.Alert($"[SceneLevelGraphExecutor] ReversePropState: prop not found for GroupId={groupId}, InstId={instId}");
 			return;
 		}
 
@@ -648,7 +648,7 @@ public sealed class SceneLevelGraphExecutor
 		notify.EntityLists.Add(prop.ToSceneEntityInfo());
 		_session.SendPacket(notify);
 
-		_log.LogInfo($"[SceneLevelGraphExecutor] ReversePropState applied for GroupId={groupId}, InstId={instId}, {oldState} -> {newState}");
+		_log.Message($"[SceneLevelGraphExecutor] ReversePropState applied for GroupId={groupId}, InstId={instId}, {oldState} -> {newState}");
 
 		OnMonstersChanged();
 	}
@@ -656,7 +656,7 @@ public sealed class SceneLevelGraphExecutor
 	private void ExecuteToastPile(ToastPile config)
 	{
 		// TODO?
-		_log.LogInfo($"[SceneLevelGraphExecutor] ToastPile: ImgPath={config.ImgPath}, DescTextID={config.DescTextID}");
+		_log.Message($"[SceneLevelGraphExecutor] ToastPile: ImgPath={config.ImgPath}, DescTextID={config.DescTextID}");
 	}
 
 	public void OnWaitCustomStringReceived(string customString, uint propEntityId, uint subMissionId)
@@ -678,7 +678,7 @@ public sealed class SceneLevelGraphExecutor
 			{
 				ExecuteTaskList(pending.NextTasks, pending.GroupId, pending.OwnerPropEntityId);
 			}
-			_log.LogInfo($"[SceneLevelGraphExecutor] WaitCustomString satisfied for CustomString='{pending.CustomString}', GroupId={pending.GroupId}, OwnerEntityId={pending.OwnerPropEntityId}, PropEntityId={propEntityId}, SubMissionId={subMissionId}");
+			_log.Message($"[SceneLevelGraphExecutor] WaitCustomString satisfied for CustomString='{pending.CustomString}', GroupId={pending.GroupId}, OwnerEntityId={pending.OwnerPropEntityId}, PropEntityId={propEntityId}, SubMissionId={subMissionId}");
 		}
 	}
 
@@ -737,7 +737,7 @@ public sealed class SceneLevelGraphExecutor
 				}
 
 			default:
-				_log.LogInfo($"[SceneLevelGraphExecutor] EvaluatePredicate: unsupported predicate type {predicate.GetType().FullName}");
+				_log.Message($"[SceneLevelGraphExecutor] EvaluatePredicate: unsupported predicate type {predicate.GetType().FullName}");
 				return false;
 		}
 	}
@@ -767,7 +767,7 @@ public sealed class SceneLevelGraphExecutor
 			ExecuteTaskList(pending.OnBeHitTasks, groupId);
 		}
 
-		_log.LogInfo($"[SceneLevelGraphExecutor] OnPropBeHit triggered for GroupId={groupId}, InstId={instId}, Count={matches.Count}");
+		_log.Message($"[SceneLevelGraphExecutor] OnPropBeHit triggered for GroupId={groupId}, InstId={instId}, Count={matches.Count}");
 	}
 
 	public void OnMonstersChanged()
@@ -783,7 +783,7 @@ public sealed class SceneLevelGraphExecutor
 				continue;
 
 			uint groupId = pending.GroupId;
-			_log.LogInfo($"[SceneLevelGraphExecutor] WaitPredicateSucc satisfied for GroupId={groupId} with condition {cond?.GetType().FullName}");
+			_log.Message($"[SceneLevelGraphExecutor] WaitPredicateSucc satisfied for GroupId={groupId} with condition {cond?.GetType().FullName}");
 			_pending.Remove(pending);
 
 			if (pending.NextTasks != null && pending.NextTasks.Count > 0)

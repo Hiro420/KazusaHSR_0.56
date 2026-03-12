@@ -10,7 +10,7 @@ internal class HandlePVEBattleResultCsReq
 		PVEBattleResultCsReq req = packet.GetDecodedBody<PVEBattleResultCsReq>();
 		if (!session.player.battleManager.IsInBattle())
 		{
-			session.c.LogWarning($"Player {session.player.Uid} sent PVEBattleResultCsReq while not in a battle");
+			session.c.Alert($"Player {session.player.Uid} sent PVEBattleResultCsReq while not in a battle");
 			PVEBattleResultScRsp errorRsp = new PVEBattleResultScRsp()
 			{
 				Retcode = (uint)Retcode.RetBattleFail,

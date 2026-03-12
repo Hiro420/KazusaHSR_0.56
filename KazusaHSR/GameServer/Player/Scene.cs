@@ -97,7 +97,7 @@ public class Scene
 			if (group == null || string.IsNullOrEmpty(group.LevelGraph))
 				continue;
 
-			session.c.LogInfo($"[Scene] PostEnterScene: starting level graph {group.LevelGraph} for group {group.GroupGUID} (GroupId={groupId})");
+			session.c.Message($"[Scene] PostEnterScene: starting level graph {group.LevelGraph} for group {group.GroupGUID} (GroupId={groupId})");
 			LevelGraphExecutor.StartForGroup(groupId, group);
 		}
 	}

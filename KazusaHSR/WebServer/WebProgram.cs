@@ -103,14 +103,14 @@ public class WebProgram
 	{
 		Logger logger = new("WebServer");
 		string url = $"http://{address}:{port}/";
-		logger.LogInfo($"Starting server at {url}");
+		logger.Message($"Starting server at {url}");
 
 		HttpHandler handler = new HttpHandler();
 		HttpListener listener = new HttpListener();
 		listener.Prefixes.Add(url);
 		listener.Start();
 
-		logger.LogSuccess($"WebServer is listening on {url}...", true);
+		logger.Emit($"WebServer is listening on {url}...");
 
 		var endpointMethods = handler.GetType().GetMethods(
 			BindingFlags.Public | BindingFlags.Instance
@@ -125,7 +125,7 @@ public class WebProgram
 			HttpResponse? httpResponse = null;
 			bool handled = false;
 
-			logger.LogInfo($"Handling {request.Url} [{request.HttpMethod}]...");
+			logger.Message($"Handling {request.Url} [{request.HttpMethod}]...");
 
 			foreach (var method in endpointMethods)
 			{
@@ -147,7 +147,7 @@ public class WebProgram
 					}
 					catch (Exception ex)
 					{
-						logger.LogError($"Error invoking handler: {ex.Message} for {method.Name}\n{ex.InnerException}");
+						logger.Fail($"Error invoking handler: {ex.Message} for {method.Name}\n{ex.InnerException}");
 					}
 				}
 			}

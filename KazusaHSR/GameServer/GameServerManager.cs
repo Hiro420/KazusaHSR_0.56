@@ -27,11 +27,11 @@ public class GameServerManager
 			}
 		}
 
-		logger.LogSuccess($"Starting GameServer on {config.GameServer.ServerIP}:{config.GameServer.ServerPort}");
+		logger.Emit($"Starting GameServer on {config.GameServer.ServerIP}:{config.GameServer.ServerPort}");
 
 		TcpListener listener = new TcpListener(IPAddress.Parse(config.GameServer.ServerIP), config.GameServer.ServerPort);
 		listener.Start();
-		logger.LogSuccess("GameServer listener started");
+		logger.Emit("GameServer listener started");
 
 		CancellationTokenSource cts = new CancellationTokenSource();
 
@@ -44,7 +44,7 @@ public class GameServerManager
 
 			if (config.LogOption.Connections)
 			{
-				logger.LogSuccess($"Client connected: {tcpClient.Client.RemoteEndPoint}");
+				logger.Emit($"Client connected: {tcpClient.Client.RemoteEndPoint}");
 			}
 
 			_ = Task.Run(async () =>
@@ -53,7 +53,7 @@ public class GameServerManager
 				sessions.Remove(session);
 				if (config.LogOption.Connections)
 				{
-					logger.LogError($"Client disconnected: {tcpClient.Client.RemoteEndPoint}");
+					logger.Fail($"Client disconnected: {tcpClient.Client.RemoteEndPoint}");
 				}
 				tcpClient.Close();
 			});

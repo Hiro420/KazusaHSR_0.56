@@ -225,7 +225,7 @@ public class ChallengeManager
 				Slot = (uint)i,
 				AvatarType = AvatarType.AvatarFormalType,
 				Id = avatar.AvatarId,
-				Hp = avatar.Hp * 10,
+				Hp = avatar.Hp * 1000,
 				Sp = avatar.SP * 1000,
 				Satiety = 100,
 				SkillCastCnt = avatar.SkillCastCnt,
@@ -320,7 +320,7 @@ public class ChallengeManager
 			_player.Scene.EntityManager.TryGet(_player.GetLeaderEntityId(), out BaseEntity baseEntity);
 			if (baseEntity is not AvatarEntity avatarEntity)
 			{
-				_player.Session.c.LogError($"Entity {baseEntity._EntityId} is not avatar entity. Expected AvatarEntity, got {baseEntity.GetType().Name}");
+				_player.Session.c.Fail($"Entity {baseEntity._EntityId} is not avatar entity. Expected AvatarEntity, got {baseEntity.GetType().Name}");
 			}
 			else
 			{
@@ -340,7 +340,7 @@ public class ChallengeManager
 		{
 			if (trow.ChallengeTargetType != ChallengeType.ROUNDS)
 			{
-				_player.Session.c.LogWarning($"Unexpected challenge target with ID {trow.ID}. Expected ROUNDS, got {trow.ChallengeTargetType}");
+				_player.Session.c.Alert($"Unexpected challenge target with ID {trow.ID}. Expected ROUNDS, got {trow.ChallengeTargetType}");
 				continue;
 			}
 			this._challengeTargetConfigs.Add(trow, false);

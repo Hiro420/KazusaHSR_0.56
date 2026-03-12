@@ -16,7 +16,7 @@ internal class HandleEnterMazeCsReq
 		// little sanity check
 		if (entrance == null)
 		{
-			session.c.LogError($"Player {session.player!.Uid} tried to enter maze with invalid entrance ID {req.EntryId}.");
+			session.c.Fail($"Player {session.player!.Uid} tried to enter maze with invalid entrance ID {req.EntryId}.");
 			rsp.Retcode = (uint)Retcode.RetSceneEntryIdNotMatch;
 			session.SendPacket(rsp);
 		}

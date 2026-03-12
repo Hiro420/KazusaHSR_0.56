@@ -29,10 +29,10 @@ public class PlayerAvatar
 		this.AvatarId = AvatarId;
 		this.AvatarExcel = resourceManager.AvatarExcel.Find(a => a.AvatarID == AvatarId)!;
 		this.SkilltreeLists = InitSkillTree();
-		this.Level = 80;
+		this.Level = 1;
 		this.Exp = 0;
-		this.PromoteLevel = 5;
-		this.Rank = 6;
+		this.PromoteLevel = 0;
+		this.Rank = 0;
 		this.MaxHp = GetMaxHp();
 		this.Hp = this.MaxHp;
 		this.SP = (uint)AvatarExcel.SPNeed.Value;
@@ -80,7 +80,7 @@ public class PlayerAvatar
 			}
 			else
 			{
-				Session.c.LogWarning(
+				Session.c.Alert(
 					$"No AvatarSkillTreeRow config found for PointID {item.Key} with Level {item.Value}");
 			}
 		}
@@ -114,7 +114,7 @@ public class PlayerAvatar
 			return (uint)Math.Round(hp, MidpointRounding.ToZero);
 		}
 
-		Session.c.LogWarning(
+		Session.c.Alert(
 			$"No AvatarPromotionRow config found for AvatarId {this.AvatarId} with PromoteLevel {this.PromoteLevel}");
 		return 1000; // default value? shouldn't be used since config should always exist, but just in case
 	}
@@ -136,7 +136,7 @@ public class PlayerAvatar
 		{
 			if (item is not ItemLightcone lightcone)
 			{
-				Session.c.LogError($"Unexpected equip type for item {this.EquipGuid} on avatar {this.AvatarId}. Expected ItemLightcone, got {item.GetType().Name}");
+				Session.c.Alert($"Unexpected equip type for item {this.EquipGuid} on avatar {this.AvatarId}. Expected ItemLightcone, got {item.GetType().Name}");
 			}
 			else
 			{

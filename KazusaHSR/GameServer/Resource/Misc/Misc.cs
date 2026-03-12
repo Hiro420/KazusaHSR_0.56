@@ -2,7 +2,7 @@
 
 public class TextID
 {
-	public long hash { get; set; }
+	public long Hash { get; set; }
 }
 
 public class FixPoint

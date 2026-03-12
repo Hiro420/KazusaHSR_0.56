@@ -25,15 +25,20 @@ public class ItemLightcone : PlayerItem
 		this.IsProtected = false;
 		this.Promotion = EquipmentRow.MaxPromotion;
 
-		EquipmentExpTypeRow equipmentExpType = MainApp.resourceManager.EquipmentExpType.Where(row => row.ExpType == EquipmentRow.ExpType)
-			.OrderBy(r => r.Level)
-			.LastOrDefault()
-			?? throw new Exception($"Cannot find EquipmentExpTypeRow for ExpType {EquipmentRow.ExpType}");
-		this.Level = equipmentExpType.Level;
+		this.Level = 1;
 	}
 
 	public ItemLightcone(Session session, uint materialId, uint guid) : base(session, materialId, guid)
 	{
+	}
+
+	public uint GetMaxLevel()
+	{
+		EquipmentExpTypeRow equipmentExpType = MainApp.resourceManager.EquipmentExpType.Where(row => row.ExpType == EquipmentRow.ExpType)
+			.OrderBy(r => r.Level)
+			.LastOrDefault()
+			?? throw new Exception($"Cannot find EquipmentExpTypeRow for ExpType {EquipmentRow.ExpType}");
+		return equipmentExpType.Level;
 	}
 
 	// to ensure we levelup correctly, without errors in the middle that would affect the player's inventory
@@ -102,7 +107,7 @@ public class ItemLightcone : PlayerItem
 		Retcode applied = ApplyAddExpPlan(plan!);
 		if (applied != Retcode.RetSucc)
 		{
-			Session.c.LogError($"Failed to apply LightconeExpPlan: {applied}");
+			Session.c.Fail($"Failed to apply LightconeExpPlan: {applied}");
 			return applied;
 		}
 		return PostAddExp();
@@ -160,7 +165,7 @@ public class ItemLightcone : PlayerItem
 
 		if (row == null)
 		{
-			Session.c.LogError($"Cannot find EquipmentExpItemRow for ItemID {pileItem.ItemId}");
+			Session.c.Fail($"Cannot find EquipmentExpItemRow for ItemID {pileItem.ItemId}");
 			return Retcode.RetItemUseConfigNotExist;
 		}
 
@@ -183,7 +188,7 @@ public class ItemLightcone : PlayerItem
 
 		if (item is not ItemLightcone lightcone)
 		{
-			Session.c.LogError($"Expected ItemLightcone for uniqueId {uniqueId}, but got {item.GetType().Name}");
+			Session.c.Fail($"Expected ItemLightcone for uniqueId {uniqueId}, but got {item.GetType().Name}");
 			return Retcode.RetItemUseConfigNotExist;
 		}
 
@@ -249,7 +254,7 @@ public class ItemLightcone : PlayerItem
 
 		if (expRows.Count == 0)
 		{
-			Session.c.LogError($"Cannot find EquipmentExpType rows for ExpType {expType}");
+			Session.c.Fail($"Cannot find EquipmentExpType rows for ExpType {expType}");
 			return Retcode.RetItemUseConfigNotExist;
 		}
 
@@ -257,7 +262,7 @@ public class ItemLightcone : PlayerItem
 
 		if (this.Level == 0 || this.Level > maxLevel)
 		{
-			Session.c.LogError($"Invalid current level {this.Level} for ExpType {expType}");
+			Session.c.Fail($"Invalid current level {this.Level} for ExpType {expType}");
 			return Retcode.RetItemUseConfigNotExist;
 		}
 
@@ -267,7 +272,7 @@ public class ItemLightcone : PlayerItem
 		{
 			if (!expCostByLevel.TryGetValue(this.Level, out uint needExp))
 			{
-				Session.c.LogError($"Missing exp cost for ExpType {expType} at Level {this.Level}");
+				Session.c.Fail($"Missing exp cost for ExpType {expType} at Level {this.Level}");
 				return Retcode.RetItemUseConfigNotExist;
 			}
 

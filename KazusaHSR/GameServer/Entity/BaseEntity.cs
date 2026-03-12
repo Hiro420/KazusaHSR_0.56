@@ -60,7 +60,7 @@ public abstract class BaseEntity
 		MazeBuffRow? buffRow = MainApp.resourceManager.MazeBuff.Find(x => x.ID == mazeBuffId);
 		if (buffRow != null && !string.IsNullOrEmpty(buffRow.ModifierName))
 		{
-			Session.c.LogInfo($"Adding modifier {buffRow.ModifierName} from maze buff {mazeBuffId} to entity {_EntityId}");
+			Session.c.Message($"Adding modifier {buffRow.ModifierName} from maze buff {mazeBuffId} to entity {_EntityId}");
 			AttachedModifiers.Add(buffRow.ModifierName);
 		}
 		if (broadcast)
@@ -80,7 +80,7 @@ public abstract class BaseEntity
 		MazeBuffRow? buffRow = MainApp.resourceManager.MazeBuff.Find(x => x.ID == mazeBuffId);
 		if (buffRow != null && !string.IsNullOrEmpty(buffRow.ModifierName))
 		{
-			Session.c.LogInfo($"Removing modifier {buffRow.ModifierName} from maze buff {mazeBuffId} from entity {_EntityId}");
+			Session.c.Message($"Removing modifier {buffRow.ModifierName} from maze buff {mazeBuffId} from entity {_EntityId}");
 			AttachedModifiers.Remove(buffRow.ModifierName);
 		}
 		if (broadcast)

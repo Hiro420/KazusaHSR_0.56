@@ -5,6 +5,7 @@ public class Config
 {
 	public GameServerInfo GameServer { get; set; } = new();
 	public WebServerInfo WebServer { get; set; } = new();
+	public ConsoleServerInfo ConsoleServer { get; set; } = new();
 	public AccountDataBaseInfo AccountDataBase { get; set; } = new();
 	public KeyStoreInfo KeyStore { get; set; } = new();
 	public LogOptionInfo LogOption { get; set; } = new();
@@ -47,6 +48,13 @@ public class WebServerInfo
 	public string ServerIP { get; set; } = "127.0.0.1";
 	public int ServerPort { get; set; } = 3000;
 	public bool UseSSL { get; set; } = false;
+}
+
+public class ConsoleServerInfo
+{
+	public string ServerIP { get; set; } = "127.0.0.1";
+	public int ServerPort { get; set; } = 1337;
+	public bool Enabled { get; set; } = true;
 }
 
 // still not used //

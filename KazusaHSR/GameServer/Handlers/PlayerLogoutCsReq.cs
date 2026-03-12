@@ -10,10 +10,10 @@ internal class HandlePlayerLogoutCsReq
 		PlayerLogoutCsReq req = packet.GetDecodedBody<PlayerLogoutCsReq>();
 		if (session.player == null)
 		{
-			session.c.LogWarning("Received PlayerLogoutCsReq for unauthenticated session.");
+			session.c.Alert("Received PlayerLogoutCsReq for unauthenticated session.");
 			return;
 		}
-		session.c.LogWarning($"Player {session.player!.Uid} requested logout.");
+		session.c.Alert($"Player {session.player!.Uid} requested logout.");
 		session.Terminate();
 	}
 }

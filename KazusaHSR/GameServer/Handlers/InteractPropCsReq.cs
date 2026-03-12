@@ -12,7 +12,7 @@ internal class HandleInteractPropCsReq
 
 		if (!session.player!.Scene!.EntityManager.TryGet(req.PropEntityId, out BaseEntity propEntity))
 		{
-			session.c.LogWarning($"Player {session.player!.Uid} tried to interact with non-existing prop entity {req.PropEntityId}");
+			session.c.Alert($"Player {session.player!.Uid} tried to interact with non-existing prop entity {req.PropEntityId}");
 			InteractPropScRsp errorRsp = new InteractPropScRsp()
 			{
 				Retcode = (uint)Retcode.RetMazePropNotExist,
@@ -23,7 +23,7 @@ internal class HandleInteractPropCsReq
 
 		if (propEntity is not PropEntity prop)
 		{
-			session.c.LogWarning($"Player {session.player!.Uid} tried to interact with non-prop entity {req.PropEntityId}");
+			session.c.Alert($"Player {session.player!.Uid} tried to interact with non-prop entity {req.PropEntityId}");
 			InteractPropScRsp errorRsp = new InteractPropScRsp()
 			{
 				Retcode = (uint)Retcode.RetServerInternalError,

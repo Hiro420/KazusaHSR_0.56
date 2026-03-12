@@ -21,7 +21,7 @@ public class DatabaseManager
 
 		if (!config.UseInternal)
 		{
-			_logger.LogWarning("AccountDataBase.UseInternal is false; DatabaseManager will be inactive.");
+			_logger.Alert("AccountDataBase.UseInternal is false; DatabaseManager will be inactive.");
 		}
 
 		_client = new MongoClient(config.Uri);
@@ -81,12 +81,12 @@ public class DatabaseManager
 
 		if (doc == null || doc.Avatars == null || doc.Avatars.Count == 0)
 		{
-			_logger.LogInfo($"No existing player data for uid {uid}, creating new.");
+			_logger.Message($"No existing player data for uid {uid}, creating new.");
 
 			var player = new Player(session, uid);
 			player.InitTeams();
 			player.AddBasicAvatar();
-			player.GiveAllAvatars();
+			//player.GiveAllAvatars();
 
 			await SavePlayerAsync(accountId, token, player).ConfigureAwait(false);
 			return player;
@@ -130,7 +130,35 @@ public class DatabaseManager
 		};
 
 		await _accounts.InsertOneAsync(doc).ConfigureAwait(false);
-		_logger.LogInfo($"Created new account '{accountId}' with uid {newUid}.");
+		_logger.Message($"Created new account '{accountId}' with uid {newUid}.");
+		return doc;
+	}
+
+	public async Task<AccountDocument> CreateAccountWithUidAsync(string accountId, uint uid, string? displayName = null)
+	{
+		if (string.IsNullOrWhiteSpace(accountId))
+			throw new ArgumentException("accountId must not be empty", nameof(accountId));
+		if (uid == 0)
+			throw new ArgumentOutOfRangeException(nameof(uid), "uid must be greater than 0");
+
+		var existingByAccount = await GetByAccountIdAsync(accountId).ConfigureAwait(false);
+		if (existingByAccount != null)
+			throw new InvalidOperationException($"Account '{accountId}' already exists.");
+
+		var existingByUid = await GetByUidAsync(uid).ConfigureAwait(false);
+		if (existingByUid != null)
+			throw new InvalidOperationException($"UID '{uid}' is already in use.");
+
+		var doc = new AccountDocument
+		{
+			AccountId = accountId,
+			Uid = uid,
+			Token = string.Empty,
+			Name = string.IsNullOrWhiteSpace(displayName) ? accountId : displayName.Trim(),
+		};
+
+		await _accounts.InsertOneAsync(doc).ConfigureAwait(false);
+		_logger.Message($"Created new account '{accountId}' with custom uid {uid}.");
 		return doc;
 	}
 
@@ -139,6 +167,46 @@ public class DatabaseManager
 		if (account == null) throw new ArgumentNullException(nameof(account));
 
 		await _accounts.ReplaceOneAsync(a => a.Id == account.Id, account, new ReplaceOptions { IsUpsert = true })
+			.ConfigureAwait(false);
+	}
+
+	public async Task<long> GetAccountCountAsync()
+	{
+		return await _accounts.CountDocumentsAsync(FilterDefinition<AccountDocument>.Empty).ConfigureAwait(false);
+	}
+
+	public async Task<List<AccountDocument>> SearchAccountsAsync(string? query, int limit = 25)
+	{
+		limit = Math.Clamp(limit, 1, 100);
+
+		if (string.IsNullOrWhiteSpace(query))
+		{
+			return await _accounts
+				.Find(FilterDefinition<AccountDocument>.Empty)
+				.SortByDescending(a => a.Uid)
+				.Limit(limit)
+				.ToListAsync()
+				.ConfigureAwait(false);
+		}
+
+		string trimmed = query.Trim();
+		var filters = new List<FilterDefinition<AccountDocument>>
+		{
+			Builders<AccountDocument>.Filter.Regex(a => a.AccountId, new BsonRegularExpression(trimmed, "i")),
+			Builders<AccountDocument>.Filter.Regex(a => a.Name, new BsonRegularExpression(trimmed, "i")),
+		};
+
+		if (uint.TryParse(trimmed, out uint uid))
+		{
+			filters.Add(Builders<AccountDocument>.Filter.Eq(a => a.Uid, uid));
+		}
+
+		var filter = Builders<AccountDocument>.Filter.Or(filters);
+		return await _accounts
+			.Find(filter)
+			.SortByDescending(a => a.Uid)
+			.Limit(limit)
+			.ToListAsync()
 			.ConfigureAwait(false);
 	}
 }
@@ -222,7 +290,7 @@ public class AccountDocument
 		{
 			Name = this.Name,
 			Level = this.Level,
-			WorldLevel = this.WorldLevel,
+			//WorldLevel = this.WorldLevel,
 			Exp = this.Exp,
 			LastItemGuid = this.LastItemGuid,
 		};

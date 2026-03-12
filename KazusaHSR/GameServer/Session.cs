@@ -1,5 +1,4 @@
 ﻿using KazusaHSR.Protocol;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using ProtoBuf;
@@ -20,7 +19,6 @@ public class Session
 	public byte[]? key;
 	private uint lastGuid = 0;
 	private uint lastEntityId = 0;
-	private ILogger<Session> fileLogger;
 	private static readonly string logsFolder = "Logs";
 	private static readonly List<string> blacklist = new List<string>()
 	{   // to not flood the console
@@ -50,12 +48,6 @@ public class Session
 				.WriteTo.File(Path.Combine(logsFolder, $"latest_{sessionId}.log"), rollingInterval: RollingInterval.Day)
 				.CreateLogger();
 
-		// Create logger instance for the session
-		fileLogger = LoggerFactory.Create(builder =>
-		{
-			builder.AddFile(Path.Combine(logsFolder, $"session_{sessionId}.log"));
-		}).CreateLogger<Session>();
-
 		_JsonConverter = new JsonSerializer
 		{
 			NullValueHandling = NullValueHandling.Ignore
@@ -74,7 +66,7 @@ public class Session
 			.LoadOrCreatePlayerAsync(this, AccountId, Token, AccountUid)
 			.GetAwaiter()
 			.GetResult();
-		player.GiveAllItems();
+		//player.GiveAllItems();
 		player.Scene.AddAllEntities();
 
 		AbilityManager = new AbilityManager(this);
@@ -118,16 +110,8 @@ public class Session
 		}
 		catch (Exception ex)
 		{
-			c.LogError($"ReceiveLoop error: {ex}");
+			c.Fail($"ReceiveLoop error: {ex}");
 		}
-	}
-
-	public async Task LogToFileAsync(string message)
-	{
-		await Task.Run(() =>
-		{
-			fileLogger.LogInformation(message);
-		});
 	}
 
 	private string PacketToJson(Packet packet)
@@ -143,7 +127,7 @@ public class Session
 		}
 		catch (Exception e)
 		{
-			c.LogError($"{e.Message}, {e.InnerException}, {e.Source}");
+			c.Fail($"{e.Message}, {e.InnerException}, {e.Source}");
 			return String.Empty;
 		}
 	}
@@ -195,12 +179,11 @@ public class Session
 		string protoName = $"{(PacketId)packet.CmdId}";
 		string logStr = $"Received {protoName} {PacketToJson(packet)}";
 		if (!blacklist.Contains(protoName) && MainApp.config.LogOption.Packets)
-			c.LogInfo(logStr);
-		LogToFileAsync(logStr).Wait();
+			c.Message(logStr);
 		var handler = HandlerFactory.GetHandler((PacketId)packet.CmdId);
 		if (handler == null)
 		{
-			c.LogError($"No handler for {(PacketId)packet.CmdId}");
+			c.Fail($"No handler for {(PacketId)packet.CmdId}");
 			return;
 		}
 
@@ -219,13 +202,12 @@ public class Session
 			_stream.Write(packet, 0, packet.Length);
 			string logStr = $"Sent {protoName} {JsonConvert.SerializeObject(protoMessage)}";
 			if (!blacklist.Contains(protoName) && MainApp.config.LogOption.Packets)
-				c.LogInfo(logStr);
-			LogToFileAsync(logStr).Wait();
+				c.Message(logStr);
 			return true;
 		}
 		catch (Exception e)
 		{
-			c.LogError($"{e.Message}");
+			c.Fail($"{e.Message}");
 			return false;
 		}
 	}

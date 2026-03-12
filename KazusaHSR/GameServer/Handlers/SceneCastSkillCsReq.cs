@@ -13,7 +13,7 @@ internal class HandleSceneCastSkillCsReq
 		// todo: handle skillIndex effects, apply damage/buffs/debuffs, etc using TaskConfig
 		if (session.player.battleManager.IsInBattle())
 		{
-			session.c.LogWarning($"Player {session.player.Uid} tried to cast skill during battle, wtf?");
+			session.c.Alert($"Player {session.player.Uid} tried to cast skill during battle, wtf?");
 			rsp.Retcode = (uint)Retcode.RetSceneUseSkillFail;
 			session.SendPacket(rsp);
 			return;
@@ -21,7 +21,7 @@ internal class HandleSceneCastSkillCsReq
 
 		if (!session.player.Scene.EntityManager.TryGet(req.CastEntityId, out BaseEntity? iEntity))
 		{
-			session.c.LogWarning($"Player {session.player.Uid} tried to cast skill with non-existing entity {req.CastEntityId}");
+			session.c.Alert($"Player {session.player.Uid} tried to cast skill with non-existing entity {req.CastEntityId}");
 			rsp.Retcode = (uint)Retcode.RetSceneUseSkillFail;
 			session.SendPacket(rsp);
 			return;
