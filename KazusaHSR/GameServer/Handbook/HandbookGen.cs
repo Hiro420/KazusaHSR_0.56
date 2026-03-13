@@ -28,25 +28,36 @@ public class HandbookGen
 			sb.AppendLine($"{cmd.Attribute.Name} - {cmd.Attribute.Description}{aliases}{targetHint}");
 		}
 
-		sb.AppendLine("");
-		sb.AppendLine("# Avatars");
+		sb.AppendLine("\n# Avatars");
 		foreach (AvatarRow avatar in MainApp.resourceManager.AvatarExcel.OrderBy(a => a.AvatarID))
 		{
 			sb.AppendLine($"{avatar.AvatarID} - {GetTextMap(avatar.AvatarName)}");
 		}
 
-		sb.AppendLine("");
-		sb.AppendLine("# Items");
+		sb.AppendLine("\n# Items");
 		foreach (ItemRow itemRow in MainApp.resourceManager.ItemConfig.OrderBy(a => a.ID))
 		{
 			sb.AppendLine($"{itemRow.ID} - {GetTextMap(itemRow.ItemName)}");
 		}
 
-		sb.AppendLine("");
-		sb.AppendLine("# Lightcones");
+		sb.AppendLine("\n# Lightcones");
 		foreach (ItemRow itemRow in MainApp.resourceManager.ItemConfigEquipment.OrderBy(a => a.ID))
 		{
 			sb.AppendLine($"{itemRow.ID} - {GetTextMap(itemRow.ItemName)}");
+		}
+
+		sb.AppendLine("\n# Scenes");
+		foreach (MazePlaneRow sceneRow in MainApp.resourceManager.MazePlaneExcel.OrderBy(a => a.PlaneID))
+		{
+			sb.AppendLine($"{sceneRow.PlaneID} - {GetTextMapByName(sceneRow.PlaneName)}");
+			foreach (uint floorID in sceneRow.FloorIDList)
+			{
+				var floorRow = MainApp.resourceManager.MazeFloorExcel.FirstOrDefault(f => f.FloorID == floorID);
+				if (floorRow != null)
+				{
+					sb.AppendLine($"\t- {floorRow.FloorID} - {GetTextMapByName(floorRow.FloorName)}");
+				}
+			}
 		}
 
 		File.WriteAllText(FileName, sb.ToString());
@@ -60,5 +71,26 @@ public class HandbookGen
 			return row2.Text;
 		else
 			return "???";
+	}
+
+	private static string GetTextMapByName(string str)
+	{
+		unchecked
+		{
+			int hash1 = 5381;
+			int hash2 = hash1;
+
+			for (int i = 0; i < str.Length && str[i] != '\0'; i += 2)
+			{
+				hash1 = ((hash1 << 5) + hash1) ^ str[i];
+				if (i == str.Length - 1 || str[i + 1] == '\0')
+					break;
+				hash2 = ((hash2 << 5) + hash2) ^ str[i + 1];
+			}
+
+			int ihash = (hash1 + (hash2 * 1566083941));
+
+			return GetTextMap(new TextID() { Hash = ihash });
+		}
 	}
 }

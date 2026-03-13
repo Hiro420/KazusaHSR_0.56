@@ -103,7 +103,13 @@ public class Player
 			if (session.player.avatarDict.Any(a => a.Value.AvatarId == avatarRow.AvatarID))
 				continue;
 			PlayerAvatar playerAvatar = new(session, avatarRow.AvatarID);
-			playerAvatar.Level = Math.Min(80, level);
+			AvatarPromotionRow? maxPromo = MainApp.resourceManager.AvatarPromotionExcel.Where(p => p.AvatarID == avatarRow.AvatarID)
+				.OrderByDescending(p => p.Promotion)
+				.FirstOrDefault();
+			if (maxPromo != null)
+				playerAvatar.Level = Math.Min(maxPromo.MaxLevel, level);
+			else
+				playerAvatar.Level = Math.Min(80, level);
 			playerAvatar.PromoteLevel = ResolvePromotionAV(avatarRow, playerAvatar.Level);
 			avatars.Add(playerAvatar);
 			this.avatarDict.Add(playerAvatar.Guid, playerAvatar);

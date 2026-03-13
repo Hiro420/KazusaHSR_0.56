@@ -15,6 +15,7 @@ public class ResourceManager
 	public List<TutorialGuideRow> TutorialGuideExcel { get; set; } = new();
 	public List<MainMissionRow> MainMissionExcel { get; set; } = new();
 	public List<MazePlaneRow> MazePlaneExcel { get; set; } = new();
+	public List<MazeFloorRow> MazeFloorExcel { get; set; } = new();
 	public List<InteractRow> InteractExcel { get; set; } = new();
 	public List<ItemRow> ItemConfig { get; set; } = new();
 	public List<ItemRow> ItemConfigAvatar { get; set; } = new();

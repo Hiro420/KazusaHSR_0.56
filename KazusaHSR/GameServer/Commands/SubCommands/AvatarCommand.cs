@@ -1,4 +1,5 @@
 using KazusaHSR.GameServer.PlayerInfos;
+using KazusaHSR.GameServer.Resource.Excel;
 using KazusaHSR.Protocol;
 using System.Globalization;
 
@@ -249,7 +250,12 @@ public sealed class AvatarCommand : IConsoleCommand
 		};
 		foreach (PlayerAvatar avatar in GetTargetAvatars(context, selector))
 		{
-			avatar.Level = level;
+			AvatarPromotionRow? maxPromo = MainApp.resourceManager.AvatarPromotionExcel.Where(p => p.AvatarID == avatar.AvatarId)
+				.OrderByDescending(p => p.Promotion)
+				.FirstOrDefault();
+			uint maxLevel = maxPromo != null ? maxPromo.MaxLevel : 80;
+			avatar.Level = Math.Min(maxLevel, level);
+			avatar.PromoteLevel = ResolvePromotionAV(avatar.AvatarExcel, avatar.Level);
 			ntf.AvatarSync.AvatarLists.Add(avatar.ToAvatarProto());
 			context.Logger.Emit($"Set level of avatar {avatar.AvatarId} to {level}");
 		}
@@ -271,7 +277,7 @@ public sealed class AvatarCommand : IConsoleCommand
 		};
 		foreach (PlayerAvatar avatar in GetTargetAvatars(context, selector))
 		{
-			avatar.PromoteLevel = eidolon;
+			avatar.Rank = Math.Min(avatar.AvatarExcel.MaxRank, eidolon);
 			ntf.AvatarSync.AvatarLists.Add(avatar.ToAvatarProto());
 			context.Logger.Emit($"Set eidolon of avatar {avatar.AvatarId} to {eidolon}");
 		}
@@ -322,5 +328,12 @@ public sealed class AvatarCommand : IConsoleCommand
 			AvatarSelectorKind.Single => player.avatarDict.Values.Where(a => a.AvatarId == selector.AvatarId),
 			_ => Enumerable.Empty<PlayerAvatar>()
 		};
+	}
+
+	private uint ResolvePromotionAV(AvatarRow avatarRow, uint level)
+	{
+		IEnumerable<AvatarPromotionRow> promotionRows = MainApp.resourceManager.AvatarPromotionExcel.Where(i =>
+			i.MaxLevel >= level && i.AvatarID == avatarRow.AvatarID);
+		return promotionRows.OrderByDescending(i => i.Promotion).Select(i => i.Promotion).FirstOrDefault();
 	}
 }

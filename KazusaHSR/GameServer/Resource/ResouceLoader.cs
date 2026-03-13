@@ -41,6 +41,7 @@ public class ResourceLoader
 		this._resourceManager.TutorialGuideExcel = LoadExcel<TutorialGuideRow>("TutorialGuideData");
 		this._resourceManager.MainMissionExcel = LoadExcel<MainMissionRow>("MainMission");
 		this._resourceManager.MazePlaneExcel = LoadExcel<MazePlaneRow>("MazePlane");
+		this._resourceManager.MazeFloorExcel = LoadExcel<MazeFloorRow>("MazeFloor");
 		this._resourceManager.InteractExcel = LoadExcel<InteractRow>("InteractConfig");
 		this._resourceManager.ItemConfig = LoadExcel<ItemRow>("ItemConfig");
 		this._resourceManager.ItemConfigAvatar = LoadExcel<ItemRow>("ItemConfigAvatar");

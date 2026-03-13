@@ -29,6 +29,7 @@ Main purpose of this project is preservation of the oldest game version we curre
 - give \<item|avatar|lightcone\> [id] [amount] [level] -> gives specific item, character or lightcone by ID
 - giveall \<items|avatars\> [level] -> same as give command, but gives everything
 - avatar \<all|id\> \<lv|level|e|eidolon|sl|skill\> \<value\> -> modifies a specific character
+- scene \<sceneId\> \<floorId\> -> teleport to a specific scene (floorId is optional)
 
 ### Personal TODO List
 - SP management
