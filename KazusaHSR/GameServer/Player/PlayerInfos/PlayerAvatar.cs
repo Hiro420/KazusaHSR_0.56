@@ -168,7 +168,8 @@ public class PlayerAvatar
 		Dictionary<uint, uint> skillTree = new();
 
 		foreach (var group in resourceManager.AvatarSkillTreeExcel
-			.Where(s => s.AvatarID == this.AvatarId && s.Level == 1) // s.MaxLevel is we want maxed out on account creation
+			.Where(s => s.AvatarID == this.AvatarId) // s.MaxLevel is we want maxed out on account creation
+			.OrderBy(a => a.Level)
 			.GroupBy(a => a.PointID))
 		{
 			var firstRow = group.First();
