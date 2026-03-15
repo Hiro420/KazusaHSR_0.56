@@ -165,7 +165,7 @@ public class BattleManager
 					.Concat(AssistEntityIds)
 					.ToList();
 				session.player.Scene.EntityManager.DespawnMany(allEntityIds);
-				session.player.Scene.LevelGraphExecutor?.OnMonstersChanged();
+				session.player.Scene.TaskExecutor.OnMonstersChanged();
 				break;
 			case BattleEndStatus.BattleEndQuit:
 			case BattleEndStatus.BattleEndLose:

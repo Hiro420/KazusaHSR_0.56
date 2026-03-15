@@ -135,7 +135,7 @@ public class PlayerTeam
 		LineupInfo info = new LineupInfo()
 		{
 			LeaderSlot = this.Leader != null ? (uint)this.Avatars.IndexOf(this.Leader) : 0,
-			Mp = this.MaxMp,
+			Mp = this.CurMp,
 			Index = (uint)this.Session.player!.TeamManager.GetIndex(this),
 			Name = "Default Team",
 			PlaneId = Session.player.Scene.PlaneId,

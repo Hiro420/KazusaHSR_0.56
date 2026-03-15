@@ -29,6 +29,7 @@ public class Player
 	public uint Exp { get; set; }
 	public BattleManager battleManager { get; set; }
 	public TeamManager TeamManager { get; }
+	public MPManager MPManager { get; }
 	public ItemManager ItemManager { get; }
 	public ShopManager ShopManager { get; set; }
 	public ChallengeManager ChallengeManager { get; }
@@ -45,6 +46,7 @@ public class Player
 		(this.Pos, this.Rot) = this.Scene.GetDefaultSpawnPosAndRot();
 		battleManager = new BattleManager(session);
 		TeamManager = new TeamManager(this);
+		MPManager = new MPManager(this);
 		ItemManager = new ItemManager(this);
 		ShopManager = new ShopManager(this);
 		ChallengeManager = new ChallengeManager(this);

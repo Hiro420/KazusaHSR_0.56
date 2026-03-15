@@ -13,7 +13,7 @@ public class Scene
 	public Session session { get; private set; }
 	public EntityManager EntityManager { get; }
 	public bool isFinishInit { get; set; } = false;
-	public SceneLevelGraphExecutor LevelGraphExecutor { get; }
+	public TaskExecutorManager TaskExecutor { get; }
 
 	private uint _nextEntityIndex = 0;
 	private readonly object _entityIdLock = new();
@@ -26,7 +26,7 @@ public class Scene
 	{
 		this.session = session;
 		this.EntityManager = new EntityManager(session);
-		this.LevelGraphExecutor = new SceneLevelGraphExecutor(this);
+		this.TaskExecutor = new TaskExecutorManager(this);
 		this.PlaneId = planeId;
 		this.FloorId = FloorId;
 
@@ -98,7 +98,7 @@ public class Scene
 				continue;
 
 			session.c.Message($"[Scene] PostEnterScene: starting level graph {group.LevelGraph} for group {group.GroupGUID} (GroupId={groupId})");
-			LevelGraphExecutor.StartForGroup(groupId, group);
+			TaskExecutor.StartForGroup(groupId, group);
 		}
 	}
 
@@ -146,7 +146,7 @@ public class Scene
 			this.EntityManager.Add(propEntity);
 			if (!string.IsNullOrEmpty(propInfo.InitLevelGraph))
 			{
-				this.LevelGraphExecutor.StartInitGraphForProp(propEntity);
+				this.TaskExecutor.StartInitGraphForProp(propEntity);
 			}
 		}
 	}
@@ -237,5 +237,27 @@ public class Scene
 			});
 			this.EntityManager.Remove(avatarEntity._EntityId);
 		}
+	}
+
+	public void TriggerEvent(uint eventId, uint entityId)
+	{
+		PlaneEventRow? planeEventRow = MainApp.resourceManager.PlaneEventExcel.FirstOrDefault(e =>
+			e.EventID == eventId &&
+			e.WorldLevel == session.player!.WorldLevel
+		);
+		if (planeEventRow == null)
+		{
+			session.c.Alert($"[Scene] TriggerEvent: No PlaneEventRow found for EventID {eventId} with WorldLevel {session.player!.WorldLevel}");
+			return;
+		}
+
+		// DropList not really possible because the client does not contain their info
+		if (planeEventRow.MPRecover > 0)
+		{
+			session.player.MPManager.AddAmount(planeEventRow.MPRecover);
+			session.c.Message($"[Scene] TriggerEvent: Recovered {planeEventRow.MPRecover} MP for player {session.player.Name}");
+		}
+
+		session.player.SavePersistent();
 	}
 }

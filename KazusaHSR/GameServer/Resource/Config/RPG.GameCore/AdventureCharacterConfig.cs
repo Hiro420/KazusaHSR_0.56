@@ -21,9 +21,26 @@ public class AdventureCharacterConfig
 	public SkillAbilityConfig[] SkillAbilityList { get; set; }
 	public string[] AbilityList { get; set; }
 	public string[] SoundBankList { get; set; }
-	// public OKCPGJLFDDK DynamicValues { get; set; }
+	public DynamicValues DynamicValues { get; set; }
 	public bool BeHitRotate { get; set; }
 	public bool EnableIK { get; set; }
 	public float ModelScale { get; set; }
 	public float ColliderScale { get; set; }
+}
+
+public class DynamicValues
+{
+	public Dictionary<string, DynamicFloatEntry> Floats { get; set; } = new();
+}
+
+public class DynamicFloatEntry
+{
+	public DynamicReadInfo ReadInfo { get; set; } = new();
+}
+
+public class DynamicReadInfo
+{
+	public string Type { get; set; } = string.Empty;
+	public string TriggerKey { get; set; } = string.Empty;
+	public int Index { get; set; }
 }

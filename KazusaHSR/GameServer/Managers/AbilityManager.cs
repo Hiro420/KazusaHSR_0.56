@@ -93,6 +93,9 @@ public sealed class AbilityManager
 			return;
 		}
 
+		// Spend 1 MP point. No need to check if the player has enough MP since client should prevent this
+		this._session.player.MPManager.SpendMP(1);
+
 		// We have an EntryAbility, but no config for it?? Smh
 		var abilityConfig = ResourceManager.GetAdventureAbilityConfig(entryAbilityName);
 		if (abilityConfig == null)
@@ -167,15 +170,13 @@ public sealed class AbilityManager
 	{
 		_session.c.Alert($"TriggerBattleSkill | {avatar.AvatarId} {req.SkillIndex}");
 		var ctx = new AdventureAbilityContext(_session, avatar, new AdventureAbilityConfig(), req, rsp);
-		var executor = new AdventureTaskExecutor(ctx);
-		executor.CreateDummyFight();
+		_session.player.Scene.TaskExecutor.CreateDummyFight(ctx);
 		return;
 	}
 
 	private void ExecuteAdventureAbility(PlayerAvatar avatar, AdventureAbilityConfig abilityConfig, SceneCastSkillCsReq req, SceneCastSkillScRsp rsp)
 	{
 		var ctx = new AdventureAbilityContext(_session, avatar, abilityConfig, req, rsp);
-		var executor = new AdventureTaskExecutor(ctx);
 
 		_session.c.Message($"ExecuteAdventureAbility | {abilityConfig.Name}");
 		foreach (var kvp in abilityConfig.Modifiers)
@@ -183,7 +184,6 @@ public sealed class AbilityManager
 			_session.c.Message($" - Modifier: {kvp.Key} => {kvp.Value.GetType().Name}");
 		}
 
-		// TODO: add more tasks
-		executor.ExecuteTasks(abilityConfig.OnStart ?? Enumerable.Empty<TaskConfig>());
+		_session.player.Scene.TaskExecutor.ExecuteAdventureTasks(ctx, abilityConfig.OnStart ?? Enumerable.Empty<TaskConfig>());
 	}
 }

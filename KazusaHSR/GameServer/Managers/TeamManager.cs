@@ -131,4 +131,24 @@ public class TeamManager
 		_player.SavePersistent();
 		return Retcode.RetSucc;
 	}
+
+	public void ModifyTeamPlayerHP(Func<PlayerAvatar, int> hpModifier)
+	{
+		foreach (var team in _player.teamList)
+		{
+			foreach (var avatar in team.Avatars)
+			{
+				if (avatar != null)
+				{
+					int hpChange = hpModifier(avatar);
+					if (hpChange > 0)
+						avatar.Hp = Math.Min(avatar.Hp + (uint)hpChange, avatar.GetMaxHp());
+					else
+						avatar.Hp = Math.Max(avatar.Hp - (uint)(-hpChange), 0);
+				}
+			}
+		}
+		_player.SendSyncLineupNotify();
+		_player.SavePersistent();
+	}
 }

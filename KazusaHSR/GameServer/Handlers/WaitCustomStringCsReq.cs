@@ -26,7 +26,7 @@ internal class HandleWaitCustomStringCsReq
 		var scene = session.player?.Scene;
 		if (scene != null)
 		{
-			scene.LevelGraphExecutor.OnWaitCustomStringReceived(req.CustomString, req.PropEntityId, req.SubMissionId);
+			scene.TaskExecutor.OnWaitCustomStringReceived(req.CustomString, req.PropEntityId, req.SubMissionId);
 		}
 
 		session.SendPacket(rsp);

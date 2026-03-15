@@ -30,6 +30,7 @@ Main purpose of this project is preservation of the oldest game version we curre
 - giveall \<items|avatars\> [level] -> same as give command, but gives everything
 - avatar \<all|id\> \<lv|level|e|eidolon|sl|skill\> \<value\> -> modifies a specific character
 - scene \<sceneId\> \<floorId\> -> teleport to a specific scene (floorId is optional)
+- mp \<set|add|status|refill\> \<value\> -> manages your MP (status by default)
 
 ### Personal TODO List
 - SP management

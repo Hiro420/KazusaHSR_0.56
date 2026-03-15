@@ -206,7 +206,7 @@ public class ChallengeManager
 		{
 			//IsVirtual = true,
 			PlaneId = _player.Scene.PlaneId,
-			Mp = _virtualLineup.MaxMp,
+			Mp = _virtualLineup.CurMp,
 			Index = 0,
 			ExtraLineupType = ExtraLineupType.LineupChallenge,
 			Name = "Challenge",

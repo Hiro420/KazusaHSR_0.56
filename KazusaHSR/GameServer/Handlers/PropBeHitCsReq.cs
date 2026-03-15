@@ -23,7 +23,7 @@ internal class HandlePropBeHitCsReq
 			return;
 		}
 
-		session.player.Scene.LevelGraphExecutor?.OnPropBeHit(prop);
+		session.player.Scene.TaskExecutor.OnPropBeHit(prop);
 		session.SendPacket(rsp);
 	}
 }
