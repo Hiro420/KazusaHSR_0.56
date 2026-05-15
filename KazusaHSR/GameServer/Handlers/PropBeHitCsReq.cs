@@ -23,7 +23,17 @@ internal class HandlePropBeHitCsReq
 			return;
 		}
 
-		session.player.Scene.TaskExecutor.OnPropBeHit(prop);
+		// Try to get the player entity (if exists)
+		if (session.player.GetCurrentLineup() == null || session.player.GetCurrentLineup().Leader == null)
+		{
+			session.c.Alert($"Player {session.player.Uid} sent PropBeHitCsReq but has no avatar in the current lineup");
+			rsp.Retcode = (uint)Retcode.RetSceneUseSkillFail;
+			session.SendPacket(rsp);
+			return;
+		}
+		AvatarEntity? spawnedAvatar = session.player.Scene.EntityManager.TryGetByPlayerAvatar(session.player.GetCurrentLineup().Leader!);
+
+		session.player.Scene.TaskExecutor.OnPropBeHit(prop, spawnedAvatar);
 		session.SendPacket(rsp);
 	}
 }

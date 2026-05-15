@@ -43,7 +43,9 @@ public sealed partial class TaskExecutorManager
 			if (entities[propGuid] is not PropEntity propEntity)
 				continue;
 
-			OnPropBeHit(propEntity);
+			AvatarEntity? currentAvatar = session.player.GetCurrentLineup().Leader != null ? 
+				session.player.Scene.EntityManager.TryGetByPlayerAvatar(session.player.GetCurrentLineup().Leader!) : null;
+			OnPropBeHit(propEntity, currentAvatar);
 		}
 	}
 

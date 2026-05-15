@@ -174,10 +174,34 @@ public sealed partial class TaskExecutorManager : ITaskExecutorRuntime
 		}
 	}
 
-	public void OnPropBeHit(PropEntity prop)
+	public void OnPropBeHit(PropEntity prop, AvatarEntity? hitSourceAvatar)
 	{
 		if (prop == null || _pendingBeHits.Count == 0)
 			return;
+
+		if (hitSourceAvatar != null)
+		{
+			Resource.Excel.PropRow? currentPropRow = MainApp.resourceManager.MazeProp.FirstOrDefault(p => p.ID == prop.DbInfo.PropID);
+			if (currentPropRow == null)
+			{
+				_log.Alert($"[TaskExecutorManager] OnPropBeHit: PropRow not found for PropID={prop.DbInfo.PropID}");
+				return;
+			}
+			Resource.Excel.AttackDamageType[] damageTypes = currentPropRow.DamageTypeList;
+			if (damageTypes.Length > 0)
+			{
+				Resource.Excel.AvatarRow avatarRow = hitSourceAvatar.DbInfo.AvatarExcel;
+				if (!damageTypes.Contains(avatarRow.DamageType))
+				{
+					_log.Message($"[TaskExecutorManager] OnPropBeHit: Hit ignored due to damage type mismatch. PropID={prop.DbInfo.PropID}, AvatarID={hitSourceAvatar.DbInfo.AvatarId}, AvatarDamageType={avatarRow.DamageType}, PropAcceptDamageTypes=[{string.Join(", ", damageTypes)}]");
+					return;
+				}
+				else
+				{
+					_log.Message($"[TaskExecutorManager] OnPropBeHit: Hit accepted. PropID={prop.DbInfo.PropID}, AvatarID={hitSourceAvatar.DbInfo.AvatarId}, AvatarDamageType={avatarRow.DamageType}, PropAcceptDamageTypes=[{string.Join(", ", damageTypes)}]");
+				}
+			}
+		}
 
 		uint groupId = prop.GroupId;
 		uint instId = prop.DbInfo.ID;

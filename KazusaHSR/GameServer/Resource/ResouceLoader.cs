@@ -69,6 +69,7 @@ public class ResourceLoader
 		this._resourceManager.DailyMissionRandomData = LoadExcel<DailyMissionRandomDataRow>("DailyMissionRandomData");
 		this._resourceManager.EquipmentPromotionConfig = LoadExcel<EquipmentPromotionRow>("EquipmentPromotionConfig");
 		this._resourceManager.MazeBuff = LoadExcel<MazeBuffRow>("MazeBuff");
+		this._resourceManager.MazeProp = LoadExcel<PropRow>("MazeProp");
 		logger.Emit("Finished loading excels");
 
 		// Load Configs

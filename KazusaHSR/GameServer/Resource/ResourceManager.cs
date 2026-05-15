@@ -43,6 +43,7 @@ public class ResourceManager
 	public List<DailyMissionRandomDataRow> DailyMissionRandomData { get; set; } = new();
 	public List<MazeBuffRow> MazeBuff { get; set; } = new();
 	public List<EquipmentPromotionRow> EquipmentPromotionConfig { get; set; } = new();
+	public List<PropRow> MazeProp { get; set; } = new();
 
 	public Dictionary<uint, Dictionary<uint, LevelFloorInfo>> LevelFloorInfos { get; set; } = new();
 	public Dictionary<uint, Dictionary<uint, Dictionary<uint, LevelGroupInfo>>> LevelGroups { get; set; } = new();
